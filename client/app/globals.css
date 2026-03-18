@@ -45,6 +45,7 @@
 
   html {
     scroll-behavior: smooth;
+    color-scheme: dark light;
   }
 
   body {
@@ -54,6 +55,29 @@
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+  }
+
+  select {
+    background-color: var(--color-bg-input);
+    color: var(--color-text-primary);
+  }
+
+  select option {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    padding: 8px 4px;
+  }
+
+  select option:hover,
+  select option:checked {
+    background: linear-gradient(#818cf8, #818cf8);
+    background-color: var(--color-accent-primary) !important;
+    color: #f1f5f9 !important;
+  }
+
+  select option:focus {
+    outline: none;
+    background-color: var(--color-bg-glass-hover);
   }
 
   a {
@@ -134,4 +158,21 @@ html.theme-light {
   --color-warning-bg: rgba(245, 158, 11, 0.12);
   --color-danger-bg: rgba(220, 38, 38, 0.10);
   --color-info-bg: rgba(37, 99, 235, 0.10);
+}
+
+html.theme-light select {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+html.theme-light select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+html.theme-light select option:hover,
+html.theme-light select option:checked {
+  background: linear-gradient(#6366f1, #6366f1);
+  background-color: #6366f1 !important;
+  color: #ffffff !important;
 }

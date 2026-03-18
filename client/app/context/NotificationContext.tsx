@@ -21,6 +21,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const refreshNotifications = useCallback(async () => {
     try {
       setLoading(true);
+      // Check if token exists before making request
+      const token = typeof window !== "undefined" ? localStorage.getItem("society_token") : null;
+      if (!token) {
+        setNotifications([]);
+        setUnreadCount(0);
+        return;
+      }
       const data = await apiGetNotifications();
       setNotifications(data);
       // Calculate unread - all notifications are unread by default since we don't have read status in API
