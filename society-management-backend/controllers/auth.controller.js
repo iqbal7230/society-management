@@ -112,7 +112,8 @@ export const googleOAuthCallback = async (req, res) => {
     if (state) {
       try {
         const decoded = Buffer.from(state, "base64url").toString("utf8");
-        if (decoded.startsWith("http://") || decoded.startsWith("https://")) {
+        // Accept both absolute URLs and relative paths
+        if (decoded.startsWith("/") || decoded.startsWith("http://") || decoded.startsWith("https://")) {
           redirectTo = decoded;
         }
       } catch {
@@ -166,7 +167,7 @@ export const googleOAuthCallback = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "2h" }
     );
 
     const { password: _, ...safeUser } = user;
@@ -354,4 +355,26 @@ export const resetPassword = async (req, res) => {
     console.error("Reset password error:", err);
     return res.status(500).json({ error: "Server error" });
   }
+};
+
+export const logout = (req, res) => {
+  // Clear Passport session
+  req.logout((err) => {
+    if (err) {
+      console.error("Logout error:", err);
+      return res.status(500).json({ error: "Logout failed" });
+    }
+
+    // Destroy session
+    req.session.destroy((sessionErr) => {
+      if (sessionErr) {
+        console.error("Session destroy error:", sessionErr);
+        return res.status(500).json({ error: "Session clear failed" });
+      }
+
+      // Clear session cookie
+      res.clearCookie("connect.sid");
+      res.json({ message: "Logged out successfully" });
+    });
+  });
 };

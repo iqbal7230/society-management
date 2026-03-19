@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext, ReactNode, useCallback} from "react";
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useRef} from "react";
 import {
   HiCheckCircle,
   HiExclamationCircle,
@@ -21,9 +21,22 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const lastMessageRef = useRef<{ message: string; time: number } | null>(null);
 
   const showToast = useCallback(
     (message: string, type: "success" | "error" | "info" = "success") => {
+      const now = Date.now();
+
+      // Deduplicate: prevent same message within 500ms
+      if (lastMessageRef.current) {
+        const { message: lastMsg, time: lastTime } = lastMessageRef.current;
+        if (lastMsg === message && now - lastTime < 500) {
+          console.log("🚫 Toast deduplicated (same message within 500ms)");
+          return;
+        }
+      }
+
+      lastMessageRef.current = { message, time: now };
       const id = Math.random().toString(36).substring(7);
       setToasts((prev) => [...prev, { id, message, type }]);
     },

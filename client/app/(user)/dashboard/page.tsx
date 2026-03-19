@@ -14,7 +14,6 @@ import {
 } from "../../lib/api";
 import { getCurrentMonth, getMonthLabel } from "../../lib/data";
 import { useRegisterPushToken } from "@/app/hooks/useRegisterPushToken";
-import { useForegroundNotification } from "@/app/hooks/useForegroundNotification";
 
 export default function UserDashboardPage() {
   
@@ -24,8 +23,7 @@ export default function UserDashboardPage() {
   const [myFlat, setMyFlat] = useState<ApiMyFlat | null>(null);
   const [myPlan, setMyPlan] = useState<ApiPlan | null>(null);
 
-   useRegisterPushToken();
-   useForegroundNotification();
+  useRegisterPushToken();
 
   useEffect(() => {
     (async () => {

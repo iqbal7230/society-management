@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "../../components/Toast";
 
-function AuthCallbackInner() {
+export default function AuthCallbackPage() {
   const params = useSearchParams();
   const router = useRouter();
   const { showToast } = useToast();
@@ -25,6 +25,7 @@ function AuthCallbackInner() {
     }
 
     if (!token) {
+      console.warn("No token received from OAuth callback");
       router.replace("/login?error=google");
       return;
     }
@@ -35,23 +36,20 @@ function AuthCallbackInner() {
           ? "/dashboard"
           : nextParam || "/dashboard";
 
+    // Set token FIRST, before any redirects
     localStorage.setItem("society_token", token);
-    showToast("Signed in successfully.", "success");
-    router.replace(next);
+
+    // Wait for token to be fully persisted and for AuthProvider to read it
+    setTimeout(() => {
+      showToast("Signed in successfully.", "success");
+      router.replace(next);
+    }, 200);
   }, [params, router, showToast]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg-primary">
       <div className="text-text-muted text-sm">Completing sign-in…</div>
     </div>
-  );
-}
-
-export default function AuthCallbackPage() {
-  return (
-    <Suspense>
-      <AuthCallbackInner />
-    </Suspense>
   );
 }
 

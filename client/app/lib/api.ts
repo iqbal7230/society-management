@@ -119,6 +119,12 @@ export async function apiResetPassword(
   });
 }
 
+export async function apiLogout(): Promise<{ message: string }> {
+  return request("/auth/logout", {
+    method: "POST",
+  });
+}
+
 // ===== Flats =====
 
 export async function apiGetFlats(): Promise<ApiFlat[]> {

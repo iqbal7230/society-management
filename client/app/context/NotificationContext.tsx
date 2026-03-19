@@ -30,8 +30,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       }
       const data = await apiGetNotifications();
       setNotifications(data);
-      // Calculate unread - all notifications are unread by default since we don't have read status in API
-      setUnreadCount(data.length);
+
+      setUnreadCount(data?.length || 0);
     } catch (error) {
       console.error("Failed to load notifications:", error);
       setNotifications([]);
@@ -49,8 +49,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   // Load notifications on mount
   useEffect(() => {
     refreshNotifications();
-    // Refresh every 30 seconds for live updates
-    const interval = setInterval(refreshNotifications, 30000);
+    // Refresh every 10 seconds for live updates
+    const interval = setInterval(refreshNotifications, 10000);
     return () => clearInterval(interval);
   }, [refreshNotifications]);
 

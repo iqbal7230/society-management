@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from "firebase/app";
-import { getMessaging, getToken, isSupported } from "firebase/messaging";
+import { getMessaging, getToken, isSupported, onMessage, Messaging } from "firebase/messaging";
 
 function getFirebaseApp() {
   const config = {
@@ -16,6 +16,12 @@ function getFirebaseApp() {
   }
 
   return getApps().length ? getApps()[0] : initializeApp(config);
+}
+
+function getFirebaseMessaging(): Messaging | null {
+  const app = getFirebaseApp();
+  if (!app) return null;
+  return getMessaging(app);
 }
 
 export async function getFcmWebToken(): Promise<string | null> {
@@ -35,5 +41,46 @@ export async function getFcmWebToken(): Promise<string | null> {
   const swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
 
   return await getToken(messaging, { vapidKey, serviceWorkerRegistration: swReg });
+}
+
+// Foreground notification listener setup
+let foregroundListenerUnsubscribe: (() => void) | null = null;
+
+export function setupForegroundNotificationListener(
+  callback: (title: string, body: string) => void
+): (() => void) {
+  // If already set up, return cleanup function
+  if (foregroundListenerUnsubscribe) {
+    return () => {
+      if (foregroundListenerUnsubscribe) {
+        foregroundListenerUnsubscribe();
+        foregroundListenerUnsubscribe = null;
+      }
+    };
+  }
+
+  try {
+    const messaging = getFirebaseMessaging();
+    if (!messaging) return () => {};
+
+    foregroundListenerUnsubscribe = onMessage(messaging, (payload) => {
+      console.log("📩 Foreground message:", payload);
+
+      const title = payload.notification?.title || "Notification";
+      const body = payload.notification?.body || "";
+
+      callback(title, body);
+    });
+
+    return () => {
+      if (foregroundListenerUnsubscribe) {
+        foregroundListenerUnsubscribe();
+        foregroundListenerUnsubscribe = null;
+      }
+    };
+  } catch (error) {
+    console.error("Failed to setup foreground notification listener:", error);
+    return () => {};
+  }
 }
 
