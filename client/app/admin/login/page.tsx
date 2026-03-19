@@ -43,12 +43,8 @@ export default function AdminLoginPage() {
       <div className="absolute w-[400px] h-[400px] bg-[radial-gradient(circle,rgba(99,102,241,0.06),transparent_70%)] -bottom-[100px] -left-[100px] pointer-events-none" />
 
       <div className="bg-bg-card border border-border-default rounded-3xl p-10 w-full max-w-[420px] backdrop-blur-[20px] relative z-10 shadow-2xl slide-up">
-        {/* Brand */}
-        <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-2xl text-white font-extrabold shadow-lg">
-            S
-          </div>
-        </div>
+
+
         <h1 className="text-3xl font-extrabold text-center mb-2 tracking-tight text-text-primary">
           Admin Portal
         </h1>
@@ -112,10 +108,6 @@ export default function AdminLoginPage() {
             {isSubmitting ? "Signing in..." : "Sign In"}
           </button>
         </form>
-
-        <p className="text-center mt-6 text-xs text-text-muted">
-          Demo Credentials: admin@society.com / admin123
-        </p>
         <p className="text-center mt-4">
           <a
             href="/admin/forgot-password"

@@ -1,8 +1,7 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -89,13 +88,7 @@ export async function apiLogin(
   });
 }
 
-// export function getGoogleLoginUrl(): string {
-//   return `${API_BASE}/auth/google`;
-// }
 
-// export async function apiGetMe(): Promise<ApiUser> {
-//   return request("/auth/me");
-// }
 export async function apiGetMe(): Promise<ApiUser> {
   return request("/auth/me");
 }
@@ -132,9 +125,7 @@ export async function apiGetFlats(): Promise<ApiFlat[]> {
   return request("/flats");
 }
 
-export async function apiAddFlat(
-  flat: Omit<ApiFlat, "id" | "is_active" | "created_at" | "updated_at">,
-): Promise<ApiFlat> {
+export async function apiAddFlat(flat: Omit<ApiFlat, "id" | "is_active" | "created_at" | "updated_at">): Promise<ApiFlat> {
   return request("/flats", {
     method: "POST",
     data: {

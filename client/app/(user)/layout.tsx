@@ -21,6 +21,7 @@ import {
 } from "react-icons/hi";
 
 import { FiMenu, FiX } from "react-icons/fi";
+import { PiBuildingApartment } from "react-icons/pi";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: HiOutlineViewGrid },
@@ -138,14 +139,14 @@ export default function UserLayout({
       >
 
         {/* Logo */}
-        <div className="p-5 border-b border-border-default flex justify-between items-center">
+        <div className="p-3 border-b border-border-default flex justify-between items-center">
           <Link href="/dashboard" className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-white font-bold">
-              P // 
+              <PiBuildingApartment/>
             </div>
-            <span className="font-semibold text-text-primary">
-              Parasdeep Sahkari Awas Samiti Society
-              <p className="">Plot No-04, Sector Pi-1, Greater Noida </p>
+            <span className="font-semibold text-text-primary text-lg">
+              Parasdeep Society
+              <p className="text-sm font-normal">Plot No-04, Sector Pi-1, Greater Noida </p>
             </span>
           </Link>
 

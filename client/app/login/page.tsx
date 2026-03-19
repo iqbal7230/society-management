@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext"
 import { useToast } from "../components/Toast";
 import { FcGoogle } from "react-icons/fc";
 import { getGoogleOAuthUrl } from "../lib/api";
+import { PiBuildingApartment } from "react-icons/pi";
 
 function UserLoginInner() {
   const [email, setEmail] = useState("");
@@ -59,7 +60,7 @@ function UserLoginInner() {
       <div className="bg-bg-card border border-border-default rounded-3xl p-10 w-full max-w-[420px] backdrop-blur-[20px] relative z-10 shadow-2xl slide-up">
         <div className="flex items-center justify-center gap-2.5 mb-8">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-2xl text-white font-extrabold shadow-lg">
-            P
+            <PiBuildingApartment/>
           </div>
         </div>
         <h1 className="text-3xl font-extrabold text-center mb-2 tracking-tight text-text-primary">
