@@ -6,7 +6,7 @@ import crypto from "crypto";
 import { sendEmail } from "../utils/email.js";
 
 dotenv.config();
-
+// login 
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -52,10 +52,10 @@ export const login = async (req, res) => {
   }
 };
 
-
+// googlelogin 
 export const googleLogin = async (req, res) => {
   try {
-    const { googleId, email, name } = req.body;
+    const { googleId, email} = req.body;
 
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
@@ -131,7 +131,7 @@ export const googleOAuthCallback = async (req, res) => {
       return res.redirect(`${redirectTo}?error=missing_email`);
     }
 
-    // ✅ STEP 1: Find user by email (IMPORTANT: not OR query)
+    // STEP 1: Find user by email 
     const userRes = await pool.query(
       "SELECT * FROM users WHERE email = $1",
       [email]
@@ -143,7 +143,7 @@ export const googleOAuthCallback = async (req, res) => {
 
     let user = userRes.rows[0];
 
-    // ✅ STEP 2: Link google_id if not already linked
+    // STEP 2: Link google_id if not already linked
     if (!user.google_id && googleId) {
       await pool.query(
         `UPDATE users 
@@ -154,7 +154,7 @@ export const googleOAuthCallback = async (req, res) => {
         [googleId, name || user.name, user.id]
       );
 
-      // ✅ IMPORTANT: re-fetch updated user
+      // IMPORTANT: re-fetch updated user
       const updatedUserRes = await pool.query(
         "SELECT * FROM users WHERE id = $1",
         [user.id]
@@ -163,7 +163,7 @@ export const googleOAuthCallback = async (req, res) => {
       user = updatedUserRes.rows[0];
     }
 
-    // ✅ STEP 3: Generate JWT
+    // STEP 3: Generate JWT
     const token = jwt.sign(
       { id: user.id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
@@ -172,7 +172,7 @@ export const googleOAuthCallback = async (req, res) => {
 
     const { password: _, ...safeUser } = user;
 
-    // ✅ STEP 4: Redirect to frontend with token + role
+    // STEP 4: Redirect to frontend with token + role
     const base = redirectTo.includes("?") ? `${redirectTo}&` : `${redirectTo}?`;
 
     return res.redirect(
@@ -254,6 +254,13 @@ export const updateProfile = async (req, res) => {
   }
 };
 
+// Step 1: forgotPassword
+//     ↓
+// User gets email with token link
+//     ↓
+// Step 2: resetPassword
+//     ↓
+// Password updated
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;

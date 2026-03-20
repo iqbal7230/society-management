@@ -41,6 +41,10 @@ export default function UserLayout({
   const { currentUser, isLoading, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
+  const isPublicAuthPage =
+    pathname?.startsWith("/forgot-password") ||
+    pathname?.startsWith("/reset-password");
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [myFlat, setMyFlat] = useState<ApiMyFlat | null>(null);
 
@@ -48,8 +52,11 @@ export default function UserLayout({
 
     if (isLoading) return;
 
+    // Public auth pages should render without redirect.
+    if (isPublicAuthPage) return;
+
     if (!currentUser) {
-      router.replace("/login");
+      if (!isPublicAuthPage) router.replace("/login");
       return;
     }
 
@@ -86,6 +93,10 @@ export default function UserLayout({
     logout();
     router.push("/login");
   };
+
+  if (isPublicAuthPage) {
+    return <>{children}</>;
+  }
 
   if (isLoading || !currentUser) {
     return (
@@ -141,7 +152,7 @@ export default function UserLayout({
         {/* Logo */}
         <div className="p-3 border-b border-border-default flex justify-between items-center">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-white font-bold">
+            <div className="w-9 h-9 rounded-lg bg-linear-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-white font-bold">
               <PiBuildingApartment/>
             </div>
             <span className="font-semibold text-text-primary text-lg">

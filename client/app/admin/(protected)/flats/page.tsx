@@ -184,7 +184,7 @@ export default function AdminFlatsPage() {
             setSearch(e.target.value);
             setPage(0);
           }}
-          className="flex-1 min-w-[200px] py-2 px-4 bg-bg-input border border-border-default rounded-lg text-text-primary text-sm"
+          className="flex-1 min-w-50 py-2 px-4 bg-bg-input border border-border-default rounded-lg text-text-primary text-sm"
         />
         <select
           value={sortBy}
@@ -272,7 +272,7 @@ export default function AdminFlatsPage() {
       )}
 
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
           <div className="bg-bg-card border border-border-default rounded-xl p-6 w-full max-w-md">
             <h2 className="text-lg font-semibold mb-4">
               {modal === "add" ? "Add Flat" : "Edit Flat"}
@@ -314,7 +314,7 @@ export default function AdminFlatsPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1">Type</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1 ">Type</label>
                 <select
                   value={form.type}
                   onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as "1BHK" | "2BHK" | "3BHK" }))}

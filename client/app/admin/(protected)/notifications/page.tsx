@@ -71,7 +71,7 @@ export default function AdminNotificationsPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto p-8">
       <h1 className="text-2xl font-bold text-text-primary mb-2">Notifications</h1>
       <p className="text-text-muted text-sm mb-6">
         Send reminders (e.g. payment due) to residents. Target &quot;all&quot; for everyone.

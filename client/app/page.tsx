@@ -75,7 +75,7 @@ export default function Home() {
           {/* Heading */}
           <h1 className="text-5xl lg:text-7xl font-bold leading-tight mb-6 text-center">
             Society Management
-            <span className="block bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent">
+            <span className="block bg-linear-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent">
               Made Simple
             </span>
           </h1>
@@ -89,7 +89,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16">
             <Link
               href="/login"
-              className="px-8 py-4 rounded-lg bg-gradient-to-r from-accent-primary to-accent-secondary text-white font-bold text-center hover:shadow-xl hover:-translate-y-1 transition-all"
+              className="px-8 py-4 rounded-lg bg-linear-to-r from-accent-primary to-accent-secondary text-white font-bold text-center hover:shadow-xl hover:-translate-y-1 transition-all"
             >
               Start Free Trial →
             </Link>
@@ -253,7 +253,7 @@ export default function Home() {
                 </div>
                 <Link
                   href="/login"
-                  className="w-full block text-center px-6 py-3 rounded-lg bg-gradient-to-r from-accent-primary to-accent-secondary text-white font-bold hover:shadow-lg transition mb-8"
+                  className="w-full block text-center px-6 py-3 rounded-lg bg-linear-to-r from-accent-primary to-accent-secondary text-white font-bold hover:shadow-lg transition mb-8"
                 >
                   Start Free Trial
                 </Link>

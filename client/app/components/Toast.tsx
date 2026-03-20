@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useRef} from "react";
-import {
-  HiCheckCircle,
-  HiExclamationCircle,
-  HiInformationCircle,
-} from "react-icons/hi";
+import { HiCheckCircle, HiExclamationCircle, HiInformationCircle } from "react-icons/hi";
 
 interface Toast {
   id: string;
@@ -30,15 +26,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       // Deduplicate: prevent same message within 500ms
       if (lastMessageRef.current) {
         const { message: lastMsg, time: lastTime } = lastMessageRef.current;
-        if (lastMsg === message && now - lastTime < 500) {
-          console.log("🚫 Toast deduplicated (same message within 500ms)");
+        if (lastMsg === message && now - lastTime < 300) {
+          console.log("Toast deduplicated (same message within 500ms)");
           return;
         }
       }
 
       lastMessageRef.current = { message, time: now };
       const id = Math.random().toString(36).substring(7);
-      setToasts((prev) => [...prev, { id, message, type }]);
+      setToasts((prev) => [...prev, { id, message, type }]  );
     },
     [],
   );
@@ -67,11 +63,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed top-5 right-5 z-[200] flex flex-col gap-2">
+      <div className="fixed top-5 right-5 z-200 flex flex-col gap-2">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`py-3.5 px-5 rounded-lg text-sm font-medium shadow-2xl slide-in-right flex items-center gap-2.5 min-w-[300px] border ${colorMap[toast.type]}`}
+            className={`py-3.5 px-5 rounded-lg text-sm font-medium shadow-2xl slide-in-right flex items-center gap-2.5 min-w-75 border ${colorMap[toast.type]}`}
           >
             {icons[toast.type]}
             {toast.message}

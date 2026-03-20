@@ -62,12 +62,9 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen flex bg-bg-primary">
-      <aside className="w-64 flex-shrink-0 bg-bg-sidebar border-r border-border-default flex flex-col">
+      <aside className="w-64 shrink-0 bg-bg-sidebar border-r border-border-default flex flex-col">
         <div className="p-5 border-b border-border-default">
           <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-white font-bold">
-              S
-            </div>
             <span className="font-semibold text-text-primary">Admin Portal</span>
           </Link>
         </div>
@@ -82,7 +79,7 @@ export default function AdminLayout({
                   : "text-text-secondary hover:bg-bg-glass hover:text-text-primary"
               }`}
             >
-              <Icon className="w-5 h-5 flex-shrink-0" />
+              <Icon className="w-5 h-5 shrink-0" />
               {label}
             </Link>
           ))}

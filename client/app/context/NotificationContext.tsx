@@ -5,7 +5,6 @@ import { apiGetNotifications, ApiNotification } from "../lib/api";
 
 interface NotificationContextType {
   notifications: ApiNotification[];
-  unreadCount: number;
   loading: boolean;
   refreshNotifications: () => Promise<void>;
   clearNotifications: () => void;
@@ -16,7 +15,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<ApiNotification[]>([]);
   const [loading, setLoading] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+ 
 
   const refreshNotifications = useCallback(async () => {
     try {
@@ -25,17 +24,17 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const token = typeof window !== "undefined" ? localStorage.getItem("society_token") : null;
       if (!token) {
         setNotifications([]);
-        setUnreadCount(0);
+       
         return;
       }
       const data = await apiGetNotifications();
       setNotifications(data);
 
-      setUnreadCount(data?.length || 0);
+     
     } catch (error) {
       console.error("Failed to load notifications:", error);
       setNotifications([]);
-      setUnreadCount(0);
+    
     } finally {
       setLoading(false);
     }
@@ -43,7 +42,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const clearNotifications = useCallback(() => {
     setNotifications([]);
-    setUnreadCount(0);
+
   }, []);
 
   // Load notifications on mount
@@ -55,7 +54,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [refreshNotifications]);
 
   return (
-    <NotificationContext.Provider value={{ notifications, unreadCount, loading, refreshNotifications, clearNotifications }}>
+    <NotificationContext.Provider value={{ notifications, loading, refreshNotifications, clearNotifications }}>
       {children}
     </NotificationContext.Provider>
   );
