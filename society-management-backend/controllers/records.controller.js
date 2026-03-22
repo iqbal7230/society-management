@@ -10,16 +10,16 @@ async function getUserFlatId(userId) {
 
 // Helper to ensure records exist for a given month
 async function ensureRecordsForMonth(month) {
-  // Get all active flats and their types
+  // Get ALL flats (important change 🔥)
   const flatsRes = await pool.query(
-    "SELECT id, type FROM flats WHERE is_active = true",
+    "SELECT id, type, is_active FROM flats"
   );
   const flats = flatsRes.rows;
 
-  // Get plan amounts
   const plansRes = await pool.query(
-    "SELECT type, amount FROM subscription_plans",
+    "SELECT type, amount FROM subscription_plans"
   );
+
   const planMap = {};
   for (const row of plansRes.rows) {
     planMap[row.type] = Number(row.amount);
@@ -28,8 +28,9 @@ async function ensureRecordsForMonth(month) {
   for (const flat of flats) {
     const existing = await pool.query(
       "SELECT id FROM monthly_records WHERE flat_id = $1 AND month = $2",
-      [flat.id, month],
+      [flat.id, month]
     );
+
     if (existing.rows.length > 0) continue;
 
     const amount = planMap[flat.type];
@@ -37,9 +38,9 @@ async function ensureRecordsForMonth(month) {
 
     await pool.query(
       `INSERT INTO monthly_records
-       (flat_id, month, amount, status, payment_mode, paid_by)
-       VALUES ($1, $2, $3, 'pending', '', '')`,
-      [flat.id, month, amount],
+       (flat_id, month, amount, status, flat_status, payment_mode, paid_by)
+       VALUES ($1, $2, $3, 'pending', $4, '', '')`,
+      [flat.id, month, amount, flat.is_active ? "active" : "inactive"]
     );
   }
 }
@@ -85,7 +86,16 @@ export const getRecords = async (req, res) => {
     }
 
     const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
-    const query = `SELECT * FROM monthly_records ${whereClause} ORDER BY month DESC, flat_id`;
+    const query = `
+SELECT 
+  mr.*,
+  f.flat_no,
+  f.owner_name
+FROM monthly_records mr
+LEFT JOIN flats f ON mr.flat_id = f.id
+${whereClause}
+ORDER BY mr.month DESC, mr.flat_id
+`;
 
     const result = await pool.query(query, values);
     res.json(result.rows);

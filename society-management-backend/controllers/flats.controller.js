@@ -4,7 +4,7 @@ import pool from "../config/db.js";
 export const getFlats = async (_req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM flats WHERE is_active = true ORDER BY id",
+      "SELECT * FROM flats",
     );
     res.json(result.rows);
   } catch (err) {
@@ -99,15 +99,15 @@ export const deleteFlat = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if there are any monthly records for this flat
     const records = await pool.query(
       "SELECT COUNT(*)::int AS count FROM monthly_records WHERE flat_id = $1",
       [id],
     );
+
     const hasRecords = records.rows[0]?.count > 0;
 
     if (hasRecords) {
-      // Soft delete: mark inactive
+      // Soft delete flat
       const result = await pool.query(
         `UPDATE flats
          SET is_active = false, updated_at = CURRENT_TIMESTAMP
@@ -120,15 +120,23 @@ export const deleteFlat = async (req, res) => {
         return res.status(404).json({ error: "Flat not found" });
       }
 
+      //  Update monthly_records also
+      await pool.query(
+        `UPDATE monthly_records
+         SET flat_status = 'inactive'
+         WHERE flat_id = $1`,
+        [id],
+      );
+
       return res.json({
         message:
-          "Flat has existing payment records and was marked inactive instead of being deleted.",
+          "Flat has existing records → marked inactive and records updated.",
         softDeleted: true,
         flat: result.rows[0],
       });
     }
 
-    // No records: hard delete
+    //  Hard delete if no records
     const result = await pool.query(
       "DELETE FROM flats WHERE id = $1 RETURNING *",
       [id],
@@ -147,4 +155,3 @@ export const deleteFlat = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
-

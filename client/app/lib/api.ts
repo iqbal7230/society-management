@@ -354,9 +354,12 @@ export interface ApiPlan {
 export interface ApiRecord {
   id: number;
   flat_id: number;
+  flat_no: string;
+  owner_name: string;
   month: string;
   amount: number;
   status: "paid" | "pending";
+  flat_status: "active" | "inactive"; // 🔥 ADD THIS
   payment_mode: "Cash" | "UPI" | "Online" | "";
   payment_date: string | null;
   paid_by: string;

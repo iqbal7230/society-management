@@ -34,7 +34,7 @@ export const getMyPlan = async (req, res) => {
       [flatId],
     );
 
-    // Fallback: if no flat-specific plan, derive from flat type (backward compatible)
+    // Fallback: if no flat-specific plan, derive from flat type
     if (planRes.rows.length === 0) {
       const flatRes = await pool.query(
         "SELECT type FROM flats WHERE id = $1",

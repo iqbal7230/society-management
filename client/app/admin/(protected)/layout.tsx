@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
@@ -17,6 +17,8 @@ import {
   HiOutlineLogout,
   HiOutlineMoon,
   HiOutlineSun,
+  HiOutlineMenu,
+  HiOutlineX,
 } from "react-icons/hi";
 
 const nav = [
@@ -40,6 +42,8 @@ export default function AdminLayout({
   const { currentUser, isLoading, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   useEffect(() => {
     if (isLoading) return;
     if (!currentUser || currentUser.role !== "admin") {
@@ -62,17 +66,46 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen flex bg-bg-primary">
-      <aside className="w-64 shrink-0 bg-bg-sidebar border-r border-border-default flex flex-col">
-        <div className="p-5 border-b border-border-default">
-          <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <span className="font-semibold text-text-primary">Admin Portal</span>
+      
+      {/* 🔹 Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* 🔹 Sidebar */}
+      <aside
+        className={`
+          fixed z-50 top-0 left-0 h-full w-64 bg-bg-sidebar border-r border-border-default flex flex-col
+          transform transition-transform duration-300
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          lg:translate-x-0 lg:static lg:flex
+        `}
+      >
+        {/* Header */}
+        <div className="p-5 border-b border-border-default flex items-center justify-between">
+          <Link href="/admin/dashboard" className="font-semibold text-text-primary">
+            Admin Portal
           </Link>
+
+          {/* Close button (mobile only) */}
+          <button
+            className="lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <HiOutlineX className="w-6 h-6" />
+          </button>
         </div>
+
+        {/* Nav */}
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           {nav.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
+              onClick={() => setSidebarOpen(false)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 pathname === href
                   ? "bg-accent-primary/15 text-accent-primary border border-border-active"
@@ -84,9 +117,10 @@ export default function AdminLayout({
             </Link>
           ))}
         </nav>
+
+        {/* Footer */}
         <div className="p-3 border-t border-border-default">
           <button
-            type="button"
             onClick={toggleTheme}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:bg-bg-glass hover:text-text-primary transition-colors mb-2"
           >
@@ -97,8 +131,8 @@ export default function AdminLayout({
             )}
             {theme === "dark" ? "Light mode" : "Dark mode"}
           </button>
+
           <button
-            type="button"
             onClick={handleLogout}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-text-muted hover:bg-bg-glass hover:text-danger transition-colors"
           >
@@ -107,9 +141,24 @@ export default function AdminLayout({
           </button>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+
+      {/* 🔹 Main Content */}
+      <div className="flex-1 flex flex-col w-full">
+        
+        {/* Topbar (mobile only) */}
+        <div className="lg:hidden flex items-center justify-between p-4 border-b border-border-default">
+          <button onClick={() => setSidebarOpen(true)}>
+            <HiOutlineMenu className="w-6 h-6" />
+          </button>
+
+          <span className="font-semibold">Admin</span>
+        </div>
+
+        {/* Page Content */}
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

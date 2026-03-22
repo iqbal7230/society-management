@@ -6,11 +6,7 @@ import { createUserSchema } from "../validators/users.validator.js";
 
 const router = Router();
 
-router.post(
-  "/",
-  authenticate,
-  adminOnly,
-  validateRequest({ body: createUserSchema }),
+router.post("/",authenticate, adminOnly, validateRequest({ body: createUserSchema }),
   createUser,
 );
 
