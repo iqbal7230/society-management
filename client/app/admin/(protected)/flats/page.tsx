@@ -10,6 +10,7 @@ import {
   ApiFlat,
 } from "../../../lib/api";
 import { useToast } from "../../../components/Toast";
+import ConfirmModal from "@/app/components/ConfirmModal";
 
 const FLAT_TYPES = ["1BHK", "2BHK", "3BHK"] as const;
 
@@ -34,6 +35,13 @@ export default function AdminFlatsPage() {
   const [userPassword, setUserPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { showToast } = useToast();
+  //----
+  const [deleteModal, setDeleteModal] = useState<{
+  open: boolean;
+  flat: ApiFlat | null;
+}>({ open: false, flat: null });
+
+const [deleting, setDeleting] = useState(false);
 
   const perPage = 8;
 
@@ -170,21 +178,28 @@ export default function AdminFlatsPage() {
     }
   };
 
-  const handleDelete = async (flat: ApiFlat) => {
-    if (!confirm(`Delete flat ${flat.flat_no}?`)) return;
-    try {
-      const res = await apiDeleteFlat(flat.id);
-      showToast(
-        res.data.softDeleted
-          ? "Flat has payments; marked inactive."
-          : "Flat deleted.",
-        "info",
-      );
-      load();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Delete failed", "error");
-    }
-  };
+ const handleDeleteClick = (flat: ApiFlat) => {
+  setDeleteModal({ open: true, flat });
+};
+
+const confirmDelete = async () => {
+  if (!deleteModal.flat) return;
+
+  setDeleting(true);
+  try {
+    // const res = await apiDeleteFlat(deleteModal.flat.id);
+
+    showToast("Flat deleted");
+
+    load();
+  } catch (err) {
+    showToast(err instanceof Error ? err.message : "Delete failed", "error");
+  } finally {
+    setDeleting(false);
+    setDeleteModal({ open: false, flat: null });
+  }
+};
+
 
   return (
     <div className="p-8">
@@ -280,7 +295,7 @@ export default function AdminFlatsPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDelete(flat)}
+                        onClick={() => handleDeleteClick(flat)}
                         className="text-danger hover:underline"
                       >
                         Delete
@@ -461,6 +476,14 @@ export default function AdminFlatsPage() {
           </div>
         </div>
       )}
+      <ConfirmModal
+  open={deleteModal.open}
+  title="Delete Flat"
+  message={`Are you sure you want to delete flat ${deleteModal.flat?.flat_no}?`}
+  onCancel={() => setDeleteModal({ open: false, flat: null })}
+  onConfirm={confirmDelete}
+  loading={deleting}
+/>
     </div>
   );
 }

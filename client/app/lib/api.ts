@@ -246,6 +246,18 @@ export async function apiGetNotifications(): Promise<ApiNotification[]> {
   return request("/notifications");
 }
 
+export async function apiGetUnreadCount(): Promise<{ count: number }> {
+  return request("/notifications/unread-count");
+}
+
+export async function apiMarkNotificationRead(id: number): Promise<{ success: boolean }> {
+  return request(`/notifications/${id}/read`, { method: "PUT" });
+}
+
+export async function apiMarkAllNotificationsRead(): Promise<{ success: boolean }> {
+  return request("/notifications/read-all", { method: "PUT" });
+}
+
 export async function apiAddNotification(
   title: string,
   message: string,
@@ -362,7 +374,7 @@ export interface ApiRecord {
   month: string;
   amount: number;
   status: "paid" | "pending";
-  flat_status: "active" | "inactive"; // 🔥 ADD THIS
+  flat_status: "active" | "inactive"; 
   payment_mode: "Cash" | "UPI" | "Online" | "";
   payment_date: string | null;
   paid_by: string;
@@ -377,5 +389,6 @@ export interface ApiNotification {
   target: string;
   date: string;
   sent_by: string;
+  read_status?: "read" | "unread";
   created_at?: string;
 }

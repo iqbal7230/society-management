@@ -8,6 +8,7 @@ import { useTheme } from "../context/ThemeContext";
 import { apiGetMyFlat, ApiMyFlat } from "../lib/api";
 import { getInitials } from "../lib/data";
 import { NotificationDropdown } from "../components/NotificationDropdown";
+import ConfirmModal from "../components/ConfirmModal";
 
 import {
   HiOutlineViewGrid,
@@ -29,11 +30,7 @@ const nav = [
   { href: "/profile", label: "Profile", icon: HiOutlineUser },
 ];
 
-export default function UserLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function UserLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { currentUser, isLoading, logout } = useAuth();
@@ -45,6 +42,10 @@ export default function UserLayout({
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [myFlat, setMyFlat] = useState<ApiMyFlat | null>(null);
+
+  // ✅ NEW STATE (Logout Modal)
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     if (isLoading) return;
@@ -81,9 +82,18 @@ export default function UserLayout({
     };
   }, [currentUser]);
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
+  // ✅ UPDATED LOGOUT FUNCTION
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+      router.push("/login");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      setLoggingOut(false);
+      setLogoutOpen(false);
+    }
   };
 
   if (isPublicAuthPage) return <>{children}</>;
@@ -105,85 +115,93 @@ export default function UserLayout({
   }
 
   return (
-    <div className="min-h-screen flex bg-bg-primary">
-      
-      {/* ✅ Desktop Sidebar */}
-      <aside className="hidden lg:flex fixed top-0 left-0 h-screen w-64 bg-bg-sidebar border-r border-border-default flex-col z-50">
-        <SidebarContent
-          pathname={pathname}
-          theme={theme}
-          toggleTheme={toggleTheme}
-          handleLogout={handleLogout}
-          myFlat={myFlat}
-          setSidebarOpen={setSidebarOpen}
-        />
-      </aside>
-
-      {/* ✅ Mobile Sidebar + Overlay */}
-      <div
-        className={`fixed inset-0 z-50 lg:hidden ${
-          sidebarOpen ? "block" : "hidden"
-        }`}
-      >
-        {/* Overlay */}
-        <div
-          className="absolute inset-0 bg-black/40"
-          onClick={() => setSidebarOpen(false)}
-        />
-
-        {/* Sidebar */}
-        <aside
-          className={`absolute top-0 left-0 h-full w-64 bg-bg-sidebar border-r border-border-default flex flex-col transform transition-transform duration-300 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
+    <>
+      <div className="min-h-screen flex bg-bg-primary">
+        {/* Desktop Sidebar */}
+        <aside className="hidden lg:flex fixed top-0 left-0 h-screen w-64 bg-bg-sidebar border-r border-border-default flex-col z-50">
           <SidebarContent
             pathname={pathname}
             theme={theme}
             toggleTheme={toggleTheme}
-            handleLogout={handleLogout}
+            handleLogout={() => setLogoutOpen(true)}
             myFlat={myFlat}
             setSidebarOpen={setSidebarOpen}
           />
         </aside>
-      </div>
 
-      {/* ✅ Main Area */}
-      <div className="flex-1 flex flex-col lg:ml-64">
-        
-        {/* Desktop Navbar */}
-        <header className="hidden lg:flex items-center justify-between px-8 py-4 border-b border-border-default bg-bg-primary sticky top-0 z-40">
-          <h1 className="text-lg font-semibold text-text-primary">
-            Dashboard
-          </h1>
+        {/* Mobile Sidebar */}
+        <div
+          className={`fixed inset-0 z-50 lg:hidden ${
+            sidebarOpen ? "block" : "hidden"
+          }`}
+        >
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setSidebarOpen(false)}
+          />
 
-          <div className="flex items-center gap-4">
-            <NotificationDropdown />
+          <aside
+            className={`absolute top-0 left-0 h-full w-64 bg-bg-sidebar border-r border-border-default flex flex-col transform transition-transform duration-300 ${
+              sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+          >
+            <SidebarContent
+              pathname={pathname}
+              theme={theme}
+              toggleTheme={toggleTheme}
+              handleLogout={() => setLogoutOpen(true)} 
+              myFlat={myFlat}
+              setSidebarOpen={setSidebarOpen}
+            />
+          </aside>
+        </div>
 
-            <div className="w-8 h-8 rounded-full bg-accent-primary text-white flex items-center justify-center text-xs font-semibold">
-              {currentUser?.name ? getInitials(currentUser.name) : "?"}
+        {/* Main */}
+        <div className="flex-1 flex flex-col lg:ml-64">
+          {/* Desktop Navbar */}
+          <header className="hidden lg:flex items-center justify-between px-8 py-4 border-b border-border-default bg-bg-primary sticky top-0 z-40">
+            <h1 className="text-lg font-semibold text-text-primary">
+              Dashboard
+            </h1>
+
+            <div className="flex items-center gap-4">
+              <NotificationDropdown />
+
+              <div className="w-8 h-8 rounded-full bg-accent-primary text-white flex items-center justify-center text-xs font-semibold">
+                {currentUser?.name ? getInitials(currentUser.name) : "?"}
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {/* Mobile Topbar */}
-        <header className="lg:hidden flex items-center gap-3 p-4 border-b border-border-default">
-          <button onClick={() => setSidebarOpen(true)}>
-            <FiMenu size={24} />
-          </button>
-          <span className="font-semibold text-text-primary">
-            Resident Portal
-          </span>
-        </header>
+          {/* Mobile Topbar */}
+          <header className="lg:hidden flex items-center gap-3 p-4 border-b border-border-default">
+            <button onClick={() => setSidebarOpen(true)}>
+              <FiMenu size={24} />
+            </button>
+            <span className="font-semibold text-text-primary">
+              Resident Portal
+            </span>
+          </header>
 
-        {/* Content */}
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+          {/* Content */}
+          <main className="flex-1 overflow-auto p-6">{children}</main>
+        </div>
       </div>
-    </div>
+
+  
+      <ConfirmModal
+        open={logoutOpen}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        onCancel={() => setLogoutOpen(false)}
+        onConfirm={handleLogout}
+        loading={loggingOut}
+      />
+    </>
   );
 }
 
-/* 🔥 Sidebar Content Component (Reusable) */
+/* Sidebar Component */
 function SidebarContent({
   pathname,
   theme,
@@ -197,24 +215,19 @@ function SidebarContent({
       {/* Logo */}
       <div className="p-3 border-b border-border-default flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-white">
+          <div className="w-10 h-10 rounded-xl bg-linear-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-white">
             <PiBuildingApartment />
           </div>
 
-          <div className="flex flex-col leading-tight">
-            <span className="font-semibold text-text-primary text-base">
+          <div>
+            <span className="font-semibold text-text-primary">
               Parasdeep Society
             </span>
-            <span className="text-xs text-text-muted">
-              Greater Noida
-            </span>
+            <p className="text-xs text-text-muted">Greater Noida</p>
           </div>
         </div>
 
-        <button
-          className="lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        >
+        <button className="lg:hidden" onClick={() => setSidebarOpen(false)}>
           <FiX size={22} />
         </button>
       </div>
@@ -232,19 +245,19 @@ function SidebarContent({
       )}
 
       {/* Nav */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-3 space-y-1">
         {nav.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
             onClick={() => setSidebarOpen(false)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${
               pathname === href
-                ? "bg-accent-primary/15 text-accent-primary border border-border-active"
-                : "text-text-secondary hover:bg-bg-glass hover:text-text-primary"
+                ? "bg-accent-primary/15 text-accent-primary"
+                : "text-text-secondary hover:bg-bg-glass"
             }`}
           >
-            <Icon className="w-5 h-5" />
+            <Icon />
             {label}
           </Link>
         ))}
@@ -254,15 +267,15 @@ function SidebarContent({
       <div className="p-3 border-t border-border-default">
         <button
           onClick={toggleTheme}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-bg-glass mb-2"
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm hover:bg-bg-glass mb-2"
         >
-          {theme === "dark" ? ( <HiOutlineSun className="w-5 h-5" /> ) : ( <HiOutlineMoon className="w-5 h-5" /> )}
-           {theme === "dark" ? "Light mode" : "Dark mode"}
+          {theme === "dark" ? <HiOutlineSun /> : <HiOutlineMoon />}
+          {theme === "dark" ? "Light mode" : "Dark mode"}
         </button>
 
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-text-muted hover:bg-bg-glass hover:text-danger"
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm hover:bg-bg-glass"
         >
           <HiOutlineLogout />
           Logout

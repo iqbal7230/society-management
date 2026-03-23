@@ -2,6 +2,7 @@ import pg from "pg"
 import dotenv from "dotenv";
 
 dotenv.config();
+let isLogged = false;
 
 const pool = new pg.Pool({
   host: process.env.DB_HOST,
@@ -11,7 +12,12 @@ const pool = new pg.Pool({
   database: process.env.DB_NAME
 });
 
-pool.on("connect", ()=>{console.log("connected to database")})
+pool.on("connect", () => {
+  if (!isLogged) {
+    console.log("Database connected");
+    isLogged = true;
+  }
+});
 
 pool.on("error", (err)=>{
     console.log("postgress pool error", err.message)

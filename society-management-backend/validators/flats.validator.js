@@ -13,10 +13,12 @@ export const createFlatSchema = z.object({
     .min(3, "Owner name must be at least 3 characters"),
 
   email: z
-    .string()
-    .email("Invalid email")
-    .optional()
-    .or(z.literal("")),
+  .string()
+  .min(1, "Email is required")
+  .regex(
+    /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
+    "Invalid email format"
+  ),
 
   phone: z
     .string()

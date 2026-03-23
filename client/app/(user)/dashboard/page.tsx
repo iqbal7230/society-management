@@ -15,6 +15,18 @@ import {
 import { getCurrentMonth, getMonthLabel } from "../../lib/data";
 import { useRegisterPushToken } from "@/app/hooks/useRegisterPushToken";
 
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${dd}/${mm}/${yyyy} ${hours}:${minutes} ${ampm}`;
+}
+
 export default function UserDashboardPage() {
   const [records, setRecords] = useState<ApiRecord[]>([]);
   const [notifications, setNotifications] = useState<ApiNotification[]>([]);
@@ -197,7 +209,9 @@ export default function UserDashboardPage() {
                     <p className="text-text-secondary text-sm mt-1">
                       {n.message}
                     </p>
-                    <p className="text-xs text-text-muted mt-2">{n.date}</p>
+                    <p className="text-xs text-text-muted mt-2">
+                      {formatDate(n.created_at || n.date)}
+                    </p>
                   </li>
                 ))}
               </ul>

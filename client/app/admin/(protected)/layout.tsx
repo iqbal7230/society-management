@@ -21,6 +21,7 @@ import {
   HiOutlineX,
 } from "react-icons/hi";
 import { PiBuildingApartment } from "react-icons/pi";
+import ConfirmModal from "@/app/components/ConfirmModal";
 
 const nav = [
   { href: "/admin/dashboard", label: "Dashboard", icon: HiOutlineViewGrid },
@@ -44,6 +45,9 @@ export default function AdminLayout({
   const { theme, toggleTheme } = useTheme();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  //--- modals
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     if (isLoading) return;
@@ -52,10 +56,20 @@ export default function AdminLayout({
     }
   }, [currentUser, isLoading, router]);
 
-  const handleLogout = () => {
-    logout();
-    router.push("/admin/login");
-  };
+  const handleLogout = async () => {
+  setLoggingOut(true);
+
+  try {
+    await logout(); // clears token/session
+
+    router.push("/login"); // redirect
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoggingOut(false);
+    setLogoutOpen(false);
+  }
+};
 
   if (isLoading || !currentUser || currentUser.role !== "admin") {
     return (
@@ -134,7 +148,7 @@ export default function AdminLayout({
           </button>
 
           <button
-            onClick={handleLogout}
+            onClick={() => setLogoutOpen(true)}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-text-muted hover:bg-bg-glass hover:text-danger transition-colors"
           >
             <HiOutlineLogout className="w-5 h-5" />
@@ -160,6 +174,14 @@ export default function AdminLayout({
           {children}
         </main>
       </div>
+      <ConfirmModal
+  open={logoutOpen}
+  title="Logout"
+  message="Are you sure you want to logout?"
+  onCancel={() => setLogoutOpen(false)}
+  onConfirm={handleLogout}
+  loading={loggingOut}
+/>
     </div>
   );
 }

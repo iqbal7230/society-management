@@ -27,40 +27,9 @@ function downloadCSV(report: ApiReport, month?: string, year?: string) {
   URL.revokeObjectURL(url);
 }
 
-function downloadPDF(report: ApiReport, month?: string, year?: string) {
-  const title = month
-    ? `Report ${month}`
-    : year
-      ? `Report ${year}`
-      : "Report";
-  const content = `
-    <!DOCTYPE html>
-    <html>
-    <head><meta charset="utf-8"><title>${title}</title></head>
-    <body style="font-family: sans-serif; padding: 24px;">
-      <h1>${title}</h1>
-      <table style="border-collapse: collapse; margin-top: 16px;">
-        <tr><td style="padding: 6px 12px; border: 1px solid #ccc;">Total Flats</td><td style="padding: 6px 12px; border: 1px solid #ccc;">${report.totalFlats}</td></tr>
-        <tr><td style="padding: 6px 12px; border: 1px solid #ccc;">Paid Count</td><td style="padding: 6px 12px; border: 1px solid #ccc;">${report.paidCount}</td></tr>
-        <tr><td style="padding: 6px 12px; border: 1px solid #ccc;">Pending Count</td><td style="padding: 6px 12px; border: 1px solid #ccc;">${report.pendingCount}</td></tr>
-        <tr><td style="padding: 6px 12px; border: 1px solid #ccc;">Total Collected (₹)</td><td style="padding: 6px 12px; border: 1px solid #ccc;">${report.totalCollected.toLocaleString("en-IN")}</td></tr>
-        <tr><td style="padding: 6px 12px; border: 1px solid #ccc;">Total Pending (₹)</td><td style="padding: 6px 12px; border: 1px solid #ccc;">${report.totalPending.toLocaleString("en-IN")}</td></tr>
-      </table>
-      <h2 style="margin-top: 24px;">By payment mode</h2>
-      <table style="border-collapse: collapse;">
-        ${report.byMode.map((m) => `<tr><td style="padding: 6px 12px; border: 1px solid #ccc;">${m.mode || "N/A"}</td><td style="padding: 6px 12px; border: 1px solid #ccc;">₹${Number(m.total).toLocaleString("en-IN")}</td></tr>`).join("")}
-      </table>
-    </body>
-    </html>
-  `;
-  const win = window.open("", "_blank");
-  if (win) {
-    win.document.write(content);
-    win.document.close();
-    win.print();
-    win.close();
-  }
-}
+const handlePrint = () => {
+  window.print();
+};
 
 export default function AdminReportsPage() {
   const [report, setReport] = useState<ApiReport | null>(null);
@@ -141,7 +110,7 @@ export default function AdminReportsPage() {
             </button>
             <button
               type="button"
-              onClick={() => downloadPDF(report, mode === "month" ? month : undefined, mode === "year" ? year : undefined)}
+              onClick={handlePrint}
               className="px-4 py-2 rounded-lg border border-border-default text-text-primary text-sm font-medium hover:bg-bg-glass"
             >
               Print / PDF

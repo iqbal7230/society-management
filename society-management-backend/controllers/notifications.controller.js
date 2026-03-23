@@ -153,6 +153,29 @@ export const createNotification = async (req, res) => {
       ),
     );
 
+    // Populate notification_recipients for read-tracking
+    const notificationId = result.rows[0].id;
+    const recipientFlatIds =
+      normalizedTarget === "all"
+        ? (
+            await pool.query(
+              "SELECT id FROM flats WHERE is_active = true",
+            )
+          ).rows.map((r) => r.id)
+        : selectedFlatIds;
+
+    if (recipientFlatIds.length > 0) {
+      const values = recipientFlatIds
+        .map((fid, i) => `($1, $${i + 2}, 'unread')`)
+        .join(", ");
+      await pool.query(
+        `INSERT INTO notification_recipients (notification_id, flat_id, read_status)
+         VALUES ${values}
+         ON CONFLICT DO NOTHING`,
+        [notificationId, ...recipientFlatIds],
+      );
+    }
+
     // Return stored target for debugging/visibility
     result.rows[0].target = storedTarget;
 
@@ -163,3 +186,87 @@ export const createNotification = async (req, res) => {
   }
 };
 
+// GET /api/notifications/unread-count
+export const getUnreadCount = async (req, res) => {
+  try {
+    const { id: userId } = req.user;
+
+    const flatRes = await pool.query(
+      "SELECT flat_id FROM users WHERE id = $1",
+      [userId],
+    );
+    const flatId = flatRes.rows[0]?.flat_id;
+    if (!flatId) {
+      return res.json({ count: 0 });
+    }
+
+    const result = await pool.query(
+      `SELECT COUNT(*)::int AS count
+       FROM notification_recipients
+       WHERE flat_id = $1 AND read_status = 'unread'`,
+      [flatId],
+    );
+
+    res.json({ count: result.rows[0]?.count || 0 });
+  } catch (err) {
+    console.error("Get unread count error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+// PUT /api/notifications/:id/read
+export const markAsRead = async (req, res) => {
+  try {
+    const { id: userId } = req.user;
+    const notificationId = Number(req.params.id);
+
+    const flatRes = await pool.query(
+      "SELECT flat_id FROM users WHERE id = $1",
+      [userId],
+    );
+    const flatId = flatRes.rows[0]?.flat_id;
+    if (!flatId) {
+      return res.json({ success: true });
+    }
+
+    await pool.query(
+      `UPDATE notification_recipients
+       SET read_status = 'read'
+       WHERE notification_id = $1 AND flat_id = $2`,
+      [notificationId, flatId],
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Mark as read error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+// PUT /api/notifications/read-all
+export const markAllAsRead = async (req, res) => {
+  try {
+    const { id: userId } = req.user;
+
+    const flatRes = await pool.query(
+      "SELECT flat_id FROM users WHERE id = $1",
+      [userId],
+    );
+    const flatId = flatRes.rows[0]?.flat_id;
+    if (!flatId) {
+      return res.json({ success: true });
+    }
+
+    await pool.query(
+      `UPDATE notification_recipients
+       SET read_status = 'read'
+       WHERE flat_id = $1 AND read_status = 'unread'`,
+      [flatId],
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Mark all as read error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
