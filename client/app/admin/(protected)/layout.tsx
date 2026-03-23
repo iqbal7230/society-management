@@ -20,6 +20,7 @@ import {
   HiOutlineMenu,
   HiOutlineX,
 } from "react-icons/hi";
+import { PiBuildingApartment } from "react-icons/pi";
 
 const nav = [
   { href: "/admin/dashboard", label: "Dashboard", icon: HiOutlineViewGrid },
@@ -98,7 +99,7 @@ export default function AdminLayout({
             <HiOutlineX className="w-6 h-6" />
           </button>
         </div>
-
+           
         {/* Nav */}
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           {nav.map(({ href, label, icon: Icon }) => (

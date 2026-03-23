@@ -119,7 +119,7 @@ export default function PayNowPage() {
               <p className="text-success text-sm mt-2">This month is already paid.</p>
             ) : (
               <p className="text-text-secondary text-sm mt-2">
-                Simulated online payment (Razorpay/Stripe). Click below to confirm.
+                Click below to confirm.
               </p>
             )}
             {selectedRecord.status === "pending" && (
@@ -135,9 +135,7 @@ export default function PayNowPage() {
           </div>
         )}
 
-        <p className="text-xs text-text-muted">
-          In production, this would integrate with Razorpay or Stripe for real payments.
-        </p>
+      
       </div>
     </div>
   );

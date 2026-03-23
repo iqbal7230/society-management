@@ -4,12 +4,12 @@ import pool from "../config/db.js";
 export const getFlats = async (_req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM flats",
+      "SELECT * FROM flats WHERE is_active = true ORDER BY flat_no",
     );
-    res.json(result.rows);
+    res.json({ success: true, message: "Flats fetched", data: result.rows });
   } catch (err) {
     console.error("Get flats error:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -19,9 +19,10 @@ export const createFlat = async (req, res) => {
     const { flatNo, ownerName, email, phone, type } = req.body;
 
     if (!flatNo || !ownerName || !type) {
-      return res
-        .status(400)
-        .json({ error: "flatNo, ownerName and type are required" });
+      return res.status(400).json({
+        success: false,
+        message: "flatNo, ownerName and type are required",
+      });
     }
 
     const result = await pool.query(
@@ -31,10 +32,17 @@ export const createFlat = async (req, res) => {
       [flatNo, ownerName, email || null, phone || null, type],
     );
 
-    res.status(201).json(result.rows[0]);
+    return res.status(201).json({
+      success: true,
+      message: "Flat added successfully",
+      data: result.rows[0],
+    });
   } catch (err) {
     console.error("Create flat error:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
@@ -70,7 +78,7 @@ export const updateFlat = async (req, res) => {
     }
 
     if (updates.length === 0) {
-      return res.status(400).json({ error: "No fields to update" });
+      return res.status(400).json({ success: false, message: "No fields to update" });
     }
 
     updates.push("updated_at = CURRENT_TIMESTAMP");
@@ -84,13 +92,13 @@ export const updateFlat = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Flat not found" });
+      return res.status(404).json({ success: false, message: "Flat not found" });
     }
 
-    res.json(result.rows[0]);
+    res.json({ success: true, message: "Flat updated successfully", data: result.rows[0] });
   } catch (err) {
     console.error("Update flat error:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -117,7 +125,7 @@ export const deleteFlat = async (req, res) => {
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: "Flat not found" });
+        return res.status(404).json({ success: false, message: "Flat not found" });
       }
 
       //  Update monthly_records also
@@ -129,10 +137,9 @@ export const deleteFlat = async (req, res) => {
       );
 
       return res.json({
-        message:
-          "Flat has existing records → marked inactive and records updated.",
-        softDeleted: true,
-        flat: result.rows[0],
+        success: true,
+        message: "Flat has existing records → marked inactive and records updated.",
+        data: { softDeleted: true, flat: result.rows[0] },
       });
     }
 
@@ -143,15 +150,16 @@ export const deleteFlat = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Flat not found" });
+      return res.status(404).json({ success: false, message: "Flat not found" });
     }
 
     return res.json({
+      success: true,
       message: "Flat deleted successfully.",
-      softDeleted: false,
+      data: { softDeleted: false },
     });
   } catch (err) {
     console.error("Delete flat error:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

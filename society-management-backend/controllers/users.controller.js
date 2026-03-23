@@ -3,25 +3,26 @@ import pool from "../config/db.js";
 
 // POST /api/users (admin only)
 // Creates a resident user (owner) linked to a flat.
+// Zod validation is handled by the validateRequest middleware in the route.
 export const createUser = async (req, res) => {
   try {
     const { name, email, phone, password, flatId } = req.body;
-
-    if (!name || !email || !password || !flatId) {
-      return res
-        .status(400)
-        .json({ error: "name, email, password and flatId are required" });
-    }
 
     const flatRes = await pool.query(
       "SELECT id, flat_no, type, is_active FROM flats WHERE id = $1",
       [flatId],
     );
     if (flatRes.rows.length === 0) {
-      return res.status(404).json({ error: "Flat not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Flat not found",
+      });
     }
     if (!flatRes.rows[0].is_active) {
-      return res.status(400).json({ error: "Flat is inactive" });
+      return res.status(400).json({
+        success: false,
+        message: "Flat is inactive",
+      });
     }
 
     const existingForFlat = await pool.query(
@@ -29,9 +30,10 @@ export const createUser = async (req, res) => {
       [flatId],
     );
     if (existingForFlat.rows.length > 0) {
-      return res
-        .status(400)
-        .json({ error: "A resident user already exists for this flat" });
+      return res.status(400).json({
+        success: false,
+        message: "A resident user already exists for this flat",
+      });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -54,14 +56,23 @@ export const createUser = async (req, res) => {
       [flatId, name, email, phone || ""],
     );
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json({
+      success: true,
+      message: "Resident user created successfully",
+      data: result.rows[0],
+    });
   } catch (err) {
     const msg = err?.message || "";
     if (msg.includes("users_email_key")) {
-      return res.status(400).json({ error: "Email already exists" });
+      return res.status(400).json({
+        success: false,
+        message: "Email already exists",
+      });
     }
     console.error("Create user error:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
-

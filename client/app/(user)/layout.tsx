@@ -9,7 +9,6 @@ import { apiGetMyFlat, ApiMyFlat } from "../lib/api";
 import { getInitials } from "../lib/data";
 import { NotificationDropdown } from "../components/NotificationDropdown";
 
-
 import {
   HiOutlineViewGrid,
   HiOutlineCalendar,
@@ -35,7 +34,6 @@ export default function UserLayout({
 }: {
   children: React.ReactNode;
 }) {
-
   const pathname = usePathname();
   const router = useRouter();
   const { currentUser, isLoading, logout } = useAuth();
@@ -49,14 +47,12 @@ export default function UserLayout({
   const [myFlat, setMyFlat] = useState<ApiMyFlat | null>(null);
 
   useEffect(() => {
-
     if (isLoading) return;
 
-    // Public auth pages should render without redirect.
     if (isPublicAuthPage) return;
 
     if (!currentUser) {
-      if (!isPublicAuthPage) router.replace("/login");
+      router.replace("/login");
       return;
     }
 
@@ -64,13 +60,10 @@ export default function UserLayout({
       if (!pathname.startsWith("/admin")) {
         router.replace("/admin/dashboard");
       }
-      return;
     }
-
   }, [currentUser, isLoading, pathname, router]);
 
   useEffect(() => {
-
     let cancelled = false;
 
     if (!currentUser || currentUser.role !== "user") return;
@@ -86,7 +79,6 @@ export default function UserLayout({
     return () => {
       cancelled = true;
     };
-
   }, [currentUser]);
 
   const handleLogout = () => {
@@ -94,9 +86,7 @@ export default function UserLayout({
     router.push("/login");
   };
 
-  if (isPublicAuthPage) {
-    return <>{children}</>;
-  }
+  if (isPublicAuthPage) return <>{children}</>;
 
   if (isLoading || !currentUser) {
     return (
@@ -115,144 +105,169 @@ export default function UserLayout({
   }
 
   return (
-    <>
-      <header className="hidden lg:flex items-center justify-between px-8 py-4 border-b border-border-default">
-        
-        <h1 className="text-lg font-semibold text-text-primary">
-          Dashboard
-        </h1>
-
-        <div className="flex items-center gap-4">
-          <NotificationDropdown />
-
-          <div className="w-8 h-8 rounded-full bg-accent-primary text-white flex items-center justify-center text-xs font-semibold">
-            {currentUser?.name ? getInitials(currentUser.name) : "?"}
-          </div>
-        </div>
-      </header>
-
-
-    <div className="min-h-screen flex ">
-
-      {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+    <div className="min-h-screen flex bg-bg-primary">
+      
+      {/* ✅ Desktop Sidebar */}
+      <aside className="hidden lg:flex fixed top-0 left-0 h-screen w-64 bg-bg-sidebar border-r border-border-default flex-col z-50">
+        <SidebarContent
+          pathname={pathname}
+          theme={theme}
+          toggleTheme={toggleTheme}
+          handleLogout={handleLogout}
+          myFlat={myFlat}
+          setSidebarOpen={setSidebarOpen}
         />
-      )}
-
-      {/* SIDEBAR */}
-      <aside
-        className={`fixed lg:static z-50 top-0 left-0 h-full w-64 flex-shrink-0 bg-bg-sidebar border-r border-border-default flex flex-col transform transition-transform duration-300
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        lg:translate-x-0`}
-      >
-
-        {/* Logo */}
-        <div className="p-3 border-b border-border-default flex justify-between items-center">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-linear-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-white font-bold">
-              <PiBuildingApartment/>
-            </div>
-            <span className="font-semibold text-text-primary text-lg">
-              Parasdeep Society
-              <p className="text-sm font-normal">Plot No-04, Sector Pi-1, Greater Noida </p>
-            </span>
-          </Link>
-
-          {/* Close button mobile */}
-          <button
-            className="lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <FiX size={22} />
-          </button>
-        </div>
-
-        {myFlat && (
-          <div className="mx-3 mt-3 p-3 rounded-xl bg-bg-glass border border-border-default">
-            <p className="font-medium text-text-primary">
-              {myFlat.owner_name}
-            </p>
-            <p className="text-text-muted text-xs">
-              {myFlat.flat_no} · {myFlat.type}
-            </p>
-          </div>
-        )}
-
-        {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-          {nav.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                pathname === href
-                  ? "bg-accent-primary/15 text-accent-primary border border-border-active"
-                  : "text-text-secondary hover:bg-bg-glass hover:text-text-primary"
-              }`}
-            >
-              <Icon className="w-5 h-5 flex-shrink-0" />
-              {label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Bottom actions */}
-        <div className="mt-auto p-3 border-t border-border-default">
-
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:bg-bg-glass hover:text-text-primary transition-colors mb-2"
-          >
-            {theme === "dark" ? (
-              <HiOutlineSun className="w-5 h-5" />
-            ) : (
-              <HiOutlineMoon className="w-5 h-5" />
-            )}
-            {theme === "dark" ? "Light mode" : "Dark mode"}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-text-muted hover:bg-bg-glass hover:text-danger transition-colors"
-          >
-            <HiOutlineLogout className="w-5 h-5" />
-            Logout
-          </button>
-
-        </div>
-
       </aside>
 
-      {/* MAIN AREA */}
-      <div className="flex-1 flex flex-col">
+      {/* ✅ Mobile Sidebar + Overlay */}
+      <div
+        className={`fixed inset-0 z-50 lg:hidden ${
+          sidebarOpen ? "block" : "hidden"
+        }`}
+      >
+        {/* Overlay */}
+        <div
+          className="absolute inset-0 bg-black/40"
+          onClick={() => setSidebarOpen(false)}
+        />
+
+        {/* Sidebar */}
+        <aside
+          className={`absolute top-0 left-0 h-full w-64 bg-bg-sidebar border-r border-border-default flex flex-col transform transition-transform duration-300 ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <SidebarContent
+            pathname={pathname}
+            theme={theme}
+            toggleTheme={toggleTheme}
+            handleLogout={handleLogout}
+            myFlat={myFlat}
+            setSidebarOpen={setSidebarOpen}
+          />
+        </aside>
+      </div>
+
+      {/* ✅ Main Area */}
+      <div className="flex-1 flex flex-col lg:ml-64">
+        
+        {/* Desktop Navbar */}
+        <header className="hidden lg:flex items-center justify-between px-8 py-4 border-b border-border-default bg-bg-primary sticky top-0 z-40">
+          <h1 className="text-lg font-semibold text-text-primary">
+            Dashboard
+          </h1>
+
+          <div className="flex items-center gap-4">
+            <NotificationDropdown />
+
+            <div className="w-8 h-8 rounded-full bg-accent-primary text-white flex items-center justify-center text-xs font-semibold">
+              {currentUser?.name ? getInitials(currentUser.name) : "?"}
+            </div>
+          </div>
+        </header>
 
         {/* Mobile Topbar */}
         <header className="lg:hidden flex items-center gap-3 p-4 border-b border-border-default">
-
           <button onClick={() => setSidebarOpen(true)}>
             <FiMenu size={24} />
           </button>
-
           <span className="font-semibold text-text-primary">
             Resident Portal
           </span>
-
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto p-8">
-          {children}
-        </main>
+        {/* Content */}
+        <main className="flex-1 overflow-auto p-6">{children}</main>
+      </div>
+    </div>
+  );
+}
 
+/* 🔥 Sidebar Content Component (Reusable) */
+function SidebarContent({
+  pathname,
+  theme,
+  toggleTheme,
+  handleLogout,
+  myFlat,
+  setSidebarOpen,
+}: any) {
+  return (
+    <>
+      {/* Logo */}
+      <div className="p-3 border-b border-border-default flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-white">
+            <PiBuildingApartment />
+          </div>
+
+          <div className="flex flex-col leading-tight">
+            <span className="font-semibold text-text-primary text-base">
+              Parasdeep Society
+            </span>
+            <span className="text-xs text-text-muted">
+              Greater Noida
+            </span>
+          </div>
+        </div>
+
+        <button
+          className="lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        >
+          <FiX size={22} />
+        </button>
       </div>
 
-    </div>
+      {/* Flat Info */}
+      {myFlat && (
+        <div className="mx-3 mt-3 p-3 rounded-xl bg-bg-glass border border-border-default">
+          <p className="font-medium text-text-primary">
+            {myFlat.owner_name}
+          </p>
+          <p className="text-text-muted text-xs">
+            {myFlat.flat_no} · {myFlat.type}
+          </p>
+        </div>
+      )}
+
+      {/* Nav */}
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        {nav.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              pathname === href
+                ? "bg-accent-primary/15 text-accent-primary border border-border-active"
+                : "text-text-secondary hover:bg-bg-glass hover:text-text-primary"
+            }`}
+          >
+            <Icon className="w-5 h-5" />
+            {label}
+          </Link>
+        ))}
+      </nav>
+
+      {/* Bottom */}
+      <div className="p-3 border-t border-border-default">
+        <button
+          onClick={toggleTheme}
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-bg-glass mb-2"
+        >
+          {theme === "dark" ? ( <HiOutlineSun className="w-5 h-5" /> ) : ( <HiOutlineMoon className="w-5 h-5" /> )}
+           {theme === "dark" ? "Light mode" : "Dark mode"}
+        </button>
+
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-text-muted hover:bg-bg-glass hover:text-danger"
+        >
+          <HiOutlineLogout />
+          Logout
+        </button>
+      </div>
     </>
   );
 }

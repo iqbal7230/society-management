@@ -46,10 +46,6 @@ export default function AuthCallbackPage() {
     }, 200);
   }, [params, router, showToast]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-primary">
-      <div className="text-text-muted text-sm">Completing sign-in…</div>
-    </div>
-  );
+ 
 }
 

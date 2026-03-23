@@ -17,7 +17,9 @@ export default function AdminFlatsPage() {
   const [flats, setFlats] = useState<ApiFlat[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"flat_no" | "owner_name" | "type">("flat_no");
+  const [sortBy, setSortBy] = useState<"flat_no" | "owner_name" | "type">(
+    "flat_no",
+  );
   const [page, setPage] = useState(0);
   const [modal, setModal] = useState<"add" | "edit" | null>(null);
   const [editing, setEditing] = useState<ApiFlat | null>(null);
@@ -41,7 +43,10 @@ export default function AdminFlatsPage() {
       const data = await apiGetFlats();
       setFlats(data);
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "Failed to load flats", "error");
+      showToast(
+        e instanceof Error ? e.message : "Failed to load flats",
+        "error",
+      );
     } finally {
       setLoading(false);
     }
@@ -60,7 +65,8 @@ export default function AdminFlatsPage() {
     )
     .sort((a, b) => {
       if (sortBy === "flat_no") return a.flat_no.localeCompare(b.flat_no);
-      if (sortBy === "owner_name") return a.owner_name.localeCompare(b.owner_name);
+      if (sortBy === "owner_name")
+        return a.owner_name.localeCompare(b.owner_name);
       return (a.type as string).localeCompare(b.type as string);
     });
 
@@ -97,16 +103,34 @@ export default function AdminFlatsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Frontend validation: if creating user, email and password are required
+    if (modal === "add" && createUser) {
+      if (!form.email) {
+        showToast("Email is required to create an owner login.", "error");
+        return;
+      }
+      if (!userPassword || userPassword.length < 8) {
+        showToast(
+          "Password is required and must be at least 8 characters.",
+          "error",
+        );
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       if (modal === "add") {
-        const newFlat = await apiAddFlat({
+        const res = await apiAddFlat({
           flat_no: form.flat_no,
           owner_name: form.owner_name,
           email: form.email || null,
           phone: form.phone || null,
           type: form.type,
         });
+        const newFlat = res.data;
+
         if (createUser) {
           if (!form.email || !userPassword) {
             showToast(
@@ -151,7 +175,7 @@ export default function AdminFlatsPage() {
     try {
       const res = await apiDeleteFlat(flat.id);
       showToast(
-        res.softDeleted
+        res.data.softDeleted
           ? "Flat has payments; marked inactive."
           : "Flat deleted.",
         "info",
@@ -205,12 +229,24 @@ export default function AdminFlatsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border-default bg-bg-glass">
-                  <th className="text-left py-3 px-4 font-medium text-text-secondary">Flat No</th>
-                  <th className="text-left py-3 px-4 font-medium text-text-secondary">Owner</th>
-                  <th className="text-left py-3 px-4 font-medium text-text-secondary">Email</th>
-                  <th className="text-left py-3 px-4 font-medium text-text-secondary">Phone</th>
-                  <th className="text-left py-3 px-4 font-medium text-text-secondary">Type</th>
-                  <th className="text-right py-3 px-4 font-medium text-text-secondary">Actions</th>
+                  <th className="text-left py-3 px-4 font-medium text-text-secondary">
+                    Flat No
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-text-secondary">
+                    Owner
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-text-secondary">
+                    Email
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-text-secondary">
+                    Phone
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-text-secondary">
+                    Type
+                  </th>
+                  <th className="text-right py-3 px-4 font-medium text-text-secondary">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -219,11 +255,21 @@ export default function AdminFlatsPage() {
                     key={flat.id}
                     className="border-b border-border-default hover:bg-bg-glass/50"
                   >
-                    <td className="py-3 px-4 text-text-primary">{flat.flat_no}</td>
-                    <td className="py-3 px-4 text-text-primary">{flat.owner_name}</td>
-                    <td className="py-3 px-4 text-text-secondary">{flat.email || "—"}</td>
-                    <td className="py-3 px-4 text-text-secondary">{flat.phone || "—"}</td>
-                    <td className="py-3 px-4 text-text-secondary">{flat.type}</td>
+                    <td className="py-3 px-4 text-text-primary">
+                      {flat.flat_no}
+                    </td>
+                    <td className="py-3 px-4 text-text-primary">
+                      {flat.owner_name}
+                    </td>
+                    <td className="py-3 px-4 text-text-secondary">
+                      {flat.email || "—"}
+                    </td>
+                    <td className="py-3 px-4 text-text-secondary">
+                      {flat.phone || "—"}
+                    </td>
+                    <td className="py-3 px-4 text-text-secondary">
+                      {flat.type}
+                    </td>
                     <td className="py-3 px-4 text-right">
                       <button
                         type="button"
@@ -279,49 +325,74 @@ export default function AdminFlatsPage() {
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1">Flat No</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  Flat No
+                </label>
                 <input
                   required
                   value={form.flat_no}
-                  onChange={(e) => setForm((f) => ({ ...f, flat_no: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, flat_no: e.target.value }))
+                  }
                   className="w-full py-2 px-4 bg-bg-input border border-border-default rounded-lg text-text-primary text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1">Owner Name</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  Owner Name
+                </label>
                 <input
                   required
                   value={form.owner_name}
-                  onChange={(e) => setForm((f) => ({ ...f, owner_name: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, owner_name: e.target.value }))
+                  }
                   className="w-full py-2 px-4 bg-bg-input border border-border-default rounded-lg text-text-primary text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1">Email</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  Email
+                </label>
                 <input
                   type="email"
                   value={form.email}
-                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, email: e.target.value }))
+                  }
                   className="w-full py-2 px-4 bg-bg-input border border-border-default rounded-lg text-text-primary text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1">Phone</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  Phone
+                </label>
                 <input
                   value={form.phone}
-                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, phone: e.target.value }))
+                  }
                   className="w-full py-2 px-4 bg-bg-input border border-border-default rounded-lg text-text-primary text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1 ">Type</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1 ">
+                  Type
+                </label>
                 <select
                   value={form.type}
-                  onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as "1BHK" | "2BHK" | "3BHK" }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      type: e.target.value as "1BHK" | "2BHK" | "3BHK",
+                    }))
+                  }
                   className="w-full py-2 px-4 bg-bg-input border border-border-default rounded-lg text-text-primary text-sm"
                 >
                   {FLAT_TYPES.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -329,7 +400,9 @@ export default function AdminFlatsPage() {
                 <div className="border border-border-default rounded-lg p-4 bg-bg-glass/40">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-medium text-text-primary">Create owner login</p>
+                      <p className="text-sm font-medium text-text-primary">
+                        Create owner login
+                      </p>
                       <p className="text-xs text-text-muted">
                         Creates a resident user linked to this flat.
                       </p>
@@ -343,7 +416,9 @@ export default function AdminFlatsPage() {
                   </div>
                   {createUser && (
                     <div className="mt-3">
-                      <label className="block text-xs font-medium text-text-secondary mb-1">Owner password</label>
+                      <label className="block text-xs font-medium text-text-secondary mb-1">
+                        Owner password
+                      </label>
                       <input
                         type="password"
                         value={userPassword}
@@ -352,7 +427,8 @@ export default function AdminFlatsPage() {
                         className="w-full py-2 px-4 bg-bg-input border border-border-default rounded-lg text-text-primary text-sm"
                       />
                       <p className="text-xs text-text-muted mt-1">
-                        The owner email from above will be used as the login email.
+                        The owner email from above will be used as the login
+                        email.
                       </p>
                     </div>
                   )}
@@ -364,11 +440,18 @@ export default function AdminFlatsPage() {
                   disabled={submitting}
                   className="px-4 py-2 rounded-lg bg-accent-primary text-white text-sm font-medium disabled:opacity-50"
                 >
-                  {submitting ? "Saving..." : modal === "add" ? "Add" : "Update"}
+                  {submitting
+                    ? "Saving..."
+                    : modal === "add"
+                      ? "Add"
+                      : "Update"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setModal(null); setEditing(null); }}
+                  onClick={() => {
+                    setModal(null);
+                    setEditing(null);
+                  }}
                   className="px-4 py-2 rounded-lg border border-border-default text-text-primary text-sm"
                 >
                   Cancel

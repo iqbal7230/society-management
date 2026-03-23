@@ -90,19 +90,29 @@ export const upsertPlan = async (req, res) => {
       return res.status(400).json({ error: "flatId must be a number" });
     }
 
-    const existing = await pool.query(
-      "SELECT * FROM subscription_plans WHERE type = $1 AND flat_id IS NOT DISTINCT FROM $2",
-      [type, normalizedFlatId],
-    );
+    let existing;
+    if (normalizedFlatId === null) {
+      // Update the base plan for this type (no specific flat)
+      existing = await pool.query(
+        "SELECT * FROM subscription_plans WHERE type = $1 AND flat_id IS NULL",
+        [type],
+      );
+    } else {
+      existing = await pool.query(
+        "SELECT * FROM subscription_plans WHERE type = $1 AND flat_id = $2",
+        [type, normalizedFlatId],
+      );
+    }
 
     let plan;
     if (existing.rows.length > 0) {
+      // Always update the matched row by id to avoid ambiguity
       const result = await pool.query(
         `UPDATE subscription_plans
          SET amount = $2, updated_at = CURRENT_TIMESTAMP
-         WHERE type = $1 AND flat_id IS NOT DISTINCT FROM $3
+         WHERE id = $1
          RETURNING *`,
-        [type, amount, normalizedFlatId],
+        [existing.rows[0].id, amount],
       );
       plan = result.rows[0];
     } else {

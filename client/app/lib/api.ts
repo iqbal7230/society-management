@@ -128,10 +128,13 @@ export async function apiLogout(): Promise<{ message: string }> {
 // ===== Flats =====
 
 export async function apiGetFlats(): Promise<ApiFlat[]> {
-  return request("/flats");
+  const res = await request<{ success: boolean; message: string; data: ApiFlat[] }>("/flats");
+  return res.data;
 }
 
-export async function apiAddFlat(flat: Omit<ApiFlat, "id" | "is_active" | "created_at" | "updated_at">): Promise<ApiFlat> {
+export async function apiAddFlat(
+  flat: Omit<ApiFlat, "id" | "is_active" | "created_at" | "updated_at">,
+): Promise<{ success: boolean; message: string; data: ApiFlat }> {
   return request("/flats", {
     method: "POST",
     data: {
@@ -153,7 +156,7 @@ export async function apiUpdateFlat(
     phone: string;
     type: string;
   }>,
-): Promise<ApiFlat> {
+): Promise<{ success: boolean; message: string; data: ApiFlat }> {
   return request(`/flats/${id}`, {
     method: "PUT",
     data: updates,
@@ -162,7 +165,7 @@ export async function apiUpdateFlat(
 
 export async function apiDeleteFlat(
   id: number,
-): Promise<{ message: string; softDeleted: boolean }> {
+): Promise<{ success: boolean; message: string; data: { softDeleted: boolean } }> {
   return request(`/flats/${id}`, { method: "DELETE" });
 }
 
@@ -275,7 +278,7 @@ export async function apiCreateResidentUser(input: {
   phone?: string;
   password: string;
   flatId: number;
-}): Promise<ApiUser> {
+}): Promise<{ success: boolean; message: string; data: ApiUser }> {
   return request("/users", {
     method: "POST",
     data: input,
