@@ -1,468 +1,559 @@
-# Society Management (Parasdeep Society)
+# 🏘️ Society Management System — Parasdeep Society
 
-This repository contains a **resident portal** and an **admin portal** to manage society subscription payments, track monthly dues, send notifications (email + push), and generate reports.
+A full-stack **Society Subscription Management** application with a **Resident Portal** and an **Admin Portal** to manage flats, subscription plans, monthly dues, payments, notifications (email + push), and financial reports.
 
 ---
 
-## 1) Workflow Diagram (End-to-End)
+## 📑 Table of Contents
 
-```mermaid
-flowchart TD
-  U[Resident] --> L1[Sign in: email/password or Google OAuth]
-  A[Admin] --> L2[Sign in: email/password or Google OAuth]
+- [Overview](#-overview)
+- [Video Demo](#-video-demo)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Getting Started](#-getting-started)
+- [Roles & Permissions](#-roles--permissions)
+- [Features](#-features)
+- [API Endpoints](#-api-endpoints)
 
-  L1 --> JWT1[Backend issues JWT]
-  L2 --> JWT2[Backend issues JWT]
+---
 
-  JWT1 --> R{Role?}
-  JWT2 --> R
+## 🔭 Overview
 
-  R -->|admin| ADMIN[Admin Portal (Next.js)]
-  R -->|user| USER[Resident Portal (Next.js)]
+Society Management System is designed for **residential societies** to digitally manage subscription payments and day-to-day operations. It provides:
 
-  subgraph Resident_Flow[Resident Portal]
-    USER --> DASH[Dashboard]
-    DASH --> REC1[Load monthly records (GET /records)]
-    DASH --> NOT1[Load notifications (GET /notifications)]
-    DASH --> FCM1[Foreground push listener (Firebase)]
-    USER --> SUBS[Subscriptions list]
-    SUBS --> DETAIL[Subscription detail by month]
-    USER --> PAYNOW[Pay Now]
-    PAYNOW --> PAYAPI[POST /payments]
-    USER --> PROFILE[Profile (PUT /auth/profile)]
-  end
+- **Admin Portal** — Manage flats, residents, subscription plans, monthly dues, payments, reports, and send email/push notifications.
+- **Resident Portal** — View dashboard, check subscription history, make payments, receive notifications, and update profile.
 
-  subgraph Admin_Flow[Admin Portal]
-    ADMIN --> FLATS[Flats CRUD (GET/POST/PUT/DELETE /flats)]
-    ADMIN --> USERS[Create resident user (POST /users)]
-    ADMIN --> PLANS[Subscription plans (GET/PUT /plans)]
-    ADMIN --> ENSURE[Ensure monthly records (POST /records/ensure)]
-    ADMIN --> MONTHLY[Monthly Records (GET /records)]
-    MONTHLY --> MARKPAID[Mark paid (PUT /records/:id/pay)]
-    ADMIN --> PAYMENTENTRY[Manual payment entry (POST /payments)]
-    ADMIN --> REPORTS[Reports (GET /reports) -> CSV/Print/PDF]
-    ADMIN --> NOTIFY[Send notifications (POST /notifications)]
-    NOTIFY --> EMAIL[Email (SMTP/Nodemailer)]
-    NOTIFY --> PUSH[Push (FCM via Firebase Admin)]
-  end
 
-  subgraph Auth_Flow[Auth Flows]
-    LOGIN1[POST /auth/login] --> JWT1
-    GOOGLE1[GET /auth/google -> /auth/google/callback] --> JWT2
-    FORGOT[POST /auth/forgot-password] --> EMAILRESET[Email reset link]
-    RESET[POST /auth/reset-password] --> LOGIN1
-  end
+
+---
+
+## 🎬 Video Demo
+
+> **📹 Coming Soon** — A recorded walkthrough of both the Admin and Resident portals will be added here.
+
+<!-- Replace with your video link or embed -->
+<!-- ![Demo Video](path/to/demo.mp4) -->
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+| Technology       | Version  | Purpose                           |
+| ---------------- | -------- | --------------------------------- |
+| **Next.js**      | 16.1.6   | React framework with App Router   |
+| **React**        | 19.2.3   | UI library                        |
+| **TypeScript**   | ^5       | Type safety                       |
+| **Tailwind CSS** | ^4       | Utility-first styling             |
+| **Axios**        | ^1.12.2  | HTTP client with JWT interceptor  |
+| **Firebase**     | ^12.10.0 | Push notifications (FCM web)      |
+| **Recharts**     | ^3.8.0   | Dashboard charts & visualizations |
+| **React Icons**  | ^5.6.0   | Icon library                      |
+
+### Backend
+
+| Technology          | Version | Purpose                            |
+| ------------------- | ------- | ---------------------------------- |
+| **Express**         | 5.2.1   | REST API framework                 |
+| **PostgreSQL (pg)** | ^8.20.0 | Relational database                |
+| **JSON Web Token**  | ^9.0.3  | JWT authentication                 |
+| **Passport**        | ^0.7.0  | Google OAuth 2.0 strategy          |
+| **Zod**             | ^4.3.6  | Request body validation            |
+| **bcryptjs**        | ^3.0.3  | Password hashing                   |
+| **Nodemailer**      | ^8.0.2  | Email notifications (SMTP)         |
+| **Firebase Admin**  | ^13.4.0 | Server-side FCM push notifications |
+| **Nodemon**         | ^3.1.14 | Dev hot-reload                     |
+
+---
+
+## 📁 Project Structure
+
+```
+
+├── client/                              # Next.js Frontend
+│   ├── app/
+│   │   ├── (user)/                      # Resident Portal (protected)
+│   │   │   ├── dashboard/page.tsx       #   Dashboard — summary & quick actions
+│   │   │   ├── subscriptions/           #   Monthly dues list & detail
+│   │   │   ├── pay-now/page.tsx         #   Online payment page
+│   │   │   ├── profile/page.tsx         #   User profile management
+│   │   │   └── layout.tsx               #   Resident sidebar + nav layout
+│   │   │
+│   │   ├── admin/(protected)/           # Admin Portal (protected)
+│   │   │   ├── dashboard/page.tsx       #   Admin dashboard & overview
+│   │   │   ├── flats/page.tsx           #   CRUD flats management
+│   │   │   ├── subscriptions/page.tsx   #   Subscription plan management
+│   │   │   ├── monthly-records/page.tsx #   Monthly dues tracking
+│   │   │   ├── payment-entry/page.tsx   #   Manual payment entry
+│   │   │   ├── reports/page.tsx         #   Financial reports (CSV/PDF)
+│   │   │   ├── notifications/page.tsx   #   Send email & push notifications
+│   │   │   ├── profile/page.tsx         #   Admin profile management
+│   │   │   └── layout.tsx               #   Admin sidebar + nav layout
+│   │   │
+│   │   ├── login/page.tsx               # Login page
+│   │   ├── forgot-password/page.tsx     # Forgot password
+│   │   ├── reset-password/page.tsx      # Reset password
+│   │   ├── auth/                        # Google OAuth callback handler
+│   │   │
+│   │   ├── components/                  # Shared UI Components
+│   │   │   ├── LoginForm.tsx            #   Login form (email + Google)
+│   │   │   ├── ForgotPasswordForm.tsx   #   Forgot password form
+│   │   │   ├── NotificationDropdown.tsx #   Bell icon + notifications list
+│   │   │   ├── ConfirmModal.tsx         #   Reusable confirmation dialog
+│   │   │   └── Toast.tsx                #   Toast notification component
+│   │   │
+│   │   ├── context/                     # React Contexts
+│   │   │   ├── AuthContext.tsx           #   Authentication state & JWT
+│   │   │   ├── NotificationContext.tsx   #   Notification polling & state
+│   │   │   ├── ForegroundNotificationContext.tsx  # FCM foreground listener
+│   │   │   └── ThemeContext.tsx          #   Dark/light theme toggle
+│   │   │
+│   │   ├── hooks/                       # Custom React Hooks
+│   │   │   ├── useForegroundNotification.ts  # FCM foreground hook
+│   │   │   └── useRegisterPushToken.ts       # Push token registration
+│   │   │
+│   │   ├── lib/                         # Utilities & Configuration
+│   │   │   ├── api.ts                   #   Axios instance + JWT interceptor
+│   │   │   ├── data.ts                  #   Static data / constants
+│   │   │   └── firebaseMessaging.ts     #   Firebase messaging setup
+│   │   │
+│   │   ├── globals.css                  # Global styles
+│   │   ├── layout.tsx                   # Root layout
+│   │   └── page.tsx                     # Home page (redirects to login)
+│   │
+│   ├── provider.tsx                     # Context providers wrapper
+│   ├── public/                          # Static assets
+│   ├── package.json
+│   └── tsconfig.json
+│
+├── society-management-backend/          # Express.js Backend
+│   ├── server.js                        # App entry point
+│   │
+│   ├── routes/                          # API Route Definitions
+│   │   ├── auth.routes.js               #   /api/v1/auth
+│   │   ├── flats.routes.js              #   /api/v1/flats
+│   │   ├── plans.routes.js              #   /api/v1/plans
+│   │   ├── records.routes.js            #   /api/v1/records
+│   │   ├── payments.routes.js           #   /api/v1/payments
+│   │   ├── notifications.routes.js      #   /api/v1/notifications
+│   │   ├── reports.routes.js            #   /api/v1/reports
+│   │   ├── users.routes.js              #   /api/v1/users
+│   │   └── pushTokens.routes.js         #   /api/v1/push-tokens
+│   │
+│   ├── controllers/                     # Business Logic
+│   │   ├── auth.controller.js           #   Login, OAuth, password reset
+│   │   ├── flats.controller.js          #   Flats CRUD
+│   │   ├── flats.me.controller.js       #   Resident's own flat
+│   │   ├── plans.controller.js          #   Subscription plans
+│   │   ├── records.controller.js        #   Monthly records & ensure
+│   │   ├── payments.controller.js       #   Payment processing
+│   │   ├── notifications.controller.js  #   Notifications (email + FCM)
+│   │   ├── reports.controller.js        #   Financial reports
+│   │   ├── users.controller.js          #   User creation (admin)
+│   │   └── pushTokens.controller.js     #   FCM token registration
+│   │
+│   ├── middlewares/                     # Express Middleware
+│   │   ├── auth.js                      #   JWT verify + adminOnly guard
+│   │   └── validate.js                  #   Zod schema validation
+│   │
+│   ├── validators/                      # Zod Schemas
+│   │   ├── auth.validator.js            #   Login & profile schemas
+│   │   ├── flats.validator.js           #   Flat create/update schemas
+│   │   └── users.validator.js           #   User creation schema
+│   │
+│   ├── config/                          # Configuration
+│   │   ├── db.js                        #   PostgreSQL pool connection
+│   │   ├── passport.js                  #   Google OAuth strategy
+│   │   └── schema.sql                   #   Database schema (DDL)
+│   │
+│   ├── utils/                           # Utility Functions
+│   │   ├── auth.js                      #   JWT sign/verify helpers
+│   │   ├── email.js                     #   Nodemailer SMTP transport
+│   │   └── fcm.js                       #   Firebase Admin FCM sender
+│   │
+│   └── package.json
+│
+└── README.md
 ```
 
 ---
 
-## 2) Architecture
+## 🚀 Getting Started
 
-```mermaid
-flowchart LR
-  subgraph Frontend[Frontend: Next.js App Router]
-    FE1[Resident pages\nDashboard / Subscriptions / Pay Now / Profile]
-    FE2[Admin pages\nFlats / Plans / Monthly Records / Payments / Reports / Notifications]
-    FE3[Contexts\nAuthContext, NotificationContext, ThemeContext]
-    FE4[Push client\nFirebase Messaging (foreground)]
-  end
+### Prerequisites
 
-  subgraph Backend[Backend: Express API]
-    BE1[Routes\n/api/v1/auth, /flats, /plans, /records, /payments, /notifications, /reports, /users, /push-tokens]
-    BE2[Controllers\nSQL queries via pg Pool]
-    BE3[Auth middleware\nJWT via Authorization header]
-    BE4[Google OAuth\nPassport + sessions]
-    BE5[Email + Push utils\nNodemailer + Firebase Admin (FCM)]
-  end
+- **Node.js** ≥ 18
+- **PostgreSQL** ≥ 14
+- **npm** or **yarn**
+- Firebase project (for push notifications)
+- SMTP credentials (for email notifications)
+- Google OAuth credentials (for social login)
 
-  DB[(PostgreSQL)]
-  FCM[(Firebase Cloud Messaging)]
+### 1. Clone the Repository
 
-  FE1 -->|HTTP + Authorization: Bearer JWT| BE1
-  FE2 -->|HTTP + Authorization: Bearer JWT| BE1
-  BE2 --> DB
-  SMTP[(SMTP / Nodemailer)]
-  BE5 -->|send emails| SMTP
-  BE5 -->|send FCM pushes| FCM
+```bash
+git clone https://github.com/iqbal7230/society-management.git
+cd society-management-backend
 ```
 
-### Main runtime components
-- **Next.js frontend (`client/`)**
-  - Resident portal: `client/app/(user)/*`
-  - Admin portal: `client/app/admin/(protected)/*`
-  - Login/forgot/reset flows and Google callback pages
-  - Calls backend through `client/app/lib/api.ts` (axios + JWT interceptor)
-  - Uses Firebase Messaging for **foreground** push notifications
-- **Express backend (`society-management-backend/`)**
-  - API under `/api/v1/*`
-  - JWT authentication (Authorization header) via `middlewares/auth.js`
-  - Google OAuth via Passport (`config/passport.js`) and session cookies
-  - Email via SMTP (`utils/email.js`)
-  - Push via Firebase Admin (`utils/fcm.js`)
-- **PostgreSQL database**
-  - Schema in `society-management-backend/config/schema.sql`
-- **FCM push**
-  - Device/browser token stored in `push_tokens`
-  - Admin notifications trigger FCM pushes to all/selected flats
+### 2. Set Up the Database
 
----
+```bash
+# Create database
+psql -U postgres -c "CREATE DATABASE society_management;"
 
-## 3) All Features
-
-### Resident (User role)
-1. **Authentication**
-   - Sign in with **email/password** (`POST /auth/login`)
-   - Sign in with **Google OAuth** (Passport redirect flow)
-   - **Forgot password** (`POST /auth/forgot-password`) and **reset password** (`POST /auth/reset-password`)
-   - View profile + update **phone** and optional **password** (`GET/PUT /auth/me` + `/auth/profile`)
-2. **Resident portal**
-   - **Dashboard**:
-     - Shows monthly record for the current month (paid/pending)
-     - Shows payment summary (pending amount + pending months)
-     - Shows quick action to `Pay Now`
-     - Loads **notifications** via polling (every 10 seconds)
-   - **Subscriptions**:
-     - Monthly dues table (month, amount, status, payment mode/date)
-     - Subscription detail page by month
-   - **Pay Now**
-     - Select a month and record payment (online payment mode)
-     - Records payment via `POST /payments`
-     - Updates UI optimistically after successful API call
-3. **Push notifications (browser foreground)**
-   - Resident dashboard registers an FCM token via `POST /push-tokens`
-   - Foreground push messages show via toast notifications
-
-### Admin (Admin role)
-1. **Flats and residents management**
-   - CRUD flats:
-     - `GET /flats` (admin only)
-     - `POST /flats`, `PUT /flats/:id`, `DELETE /flats/:id`
-   - Create resident owner/user linked to a flat:
-     - `POST /users` (creates `users` row with `role='user'`)
-2. **Subscription plan management**
-   - View subscription plans:
-     - `GET /plans`
-   - Update plan amount per flat type:
-     - `PUT /plans/:type`
-   - UI note: changes affect **new/ensured monthly records** (existing records are not automatically updated)
-3. **Monthly dues management**
-   - View monthly records by month:
-     - `GET /records?month=YYYY-MM` (admin role can view all flats or filter by `flatId`)
-   - Ensure records exist (creates missing `monthly_records` rows for active flats):
-     - `POST /records/ensure`
-   - Mark specific flat/month as paid:
-     - `PUT /records/:id/pay`
-4. **Payments**
-   - Manual payment entry:
-     - `POST /payments` (supports `Cash`, `UPI`, `Online`)
-5. **Reports**
-   - Monthly/yearly financial summaries:
-     - `GET /reports?month=YYYY-MM` or `GET /reports?year=YYYY`
-   - Export:
-     - Download CSV
-     - Print/PDF via browser print dialog
-6. **Notifications**
-   - Send notifications to:
-     - **All flats** or **Selected flats**
-     - `POST /notifications` (admin only)
-   - Notification delivery:
-     - Email via SMTP
-     - FCM push notifications using stored `push_tokens`
-   - Residents receive notifications via:
-     - API polling (`GET /notifications`)
-     - Foreground FCM listener (toast)
-
----
-
-## 4) Database ERD
-
-> Source: `society-management-backend/config/schema.sql`
-
-```mermaid
-erDiagram
-  users {
-    int id PK
-    string name
-    string email UK
-    string password
-    string phone
-    string role
-    int flat_id FK
-    string google_id
-    datetime created_at
-    datetime updated_at
-  }
-
-  flats {
-    int id PK
-    string flat_no
-    string owner_name
-    string email
-    string phone
-    string type
-    bool is_active
-    datetime created_at
-    datetime updated_at
-  }
-
-  subscription_plans {
-    int id PK
-    string type
-    decimal amount
-    int flat_id FK
-    datetime updated_at
-  }
-
-  monthly_records {
-    int id PK
-    int flat_id FK
-    string month
-    decimal amount
-    string status
-    string payment_mode
-    date payment_date
-    string paid_by
-    datetime created_at
-    datetime updated_at
-    unique (flat_id, month)
-  }
-
-  notifications {
-    int id PK
-    string title
-    text message
-    string target
-    date date
-    string sent_by
-    datetime created_at
-  }
-
-  password_resets {
-    int id PK
-    int user_id FK
-    string token_hash
-    datetime expires_at
-    datetime used_at
-    datetime created_at
-  }
-
-  push_tokens {
-    int id PK
-    int flat_id FK
-    text fcm_token
-    string device_type
-    datetime created_at
-  }
-
-  notification_recipients {
-    int id PK
-    int notification_id FK
-    int flat_id FK
-    string read_status
-  }
-
-  flats ||--o{ users : assigned
-  flats ||--o{ subscription_plans : mapped_override
-  flats ||--o{ monthly_records : has
-  users ||--o{ password_resets : requests
-  flats ||--o{ push_tokens : registers
-  notifications ||--o{ notification_recipients : tracking
-  flats ||--o{ notification_recipients : tracking
+# Run schema
+psql -U postgres -d society_management -f society-management-backend/config/schema.sql
 ```
 
-### Notes on relationship usage
-- `notifications.target` stores a **string** that indicates selection:
-  - `all`
-  - `selected:<comma-separated flatIds>`
-- The schema includes `notification_recipients` for per-recipient tracking, but the current backend controllers **do not write** to it.
-- `subscription_plans.flat_id` supports per-flat overrides, but the current admin UI updates only by **flat type** and backend record creation uses plan amounts by **type**.
+### 3. Configure Backend Environment
+
+Create `society-management-backend/.env`:
+
+```env
+# Server
+PORT=8000
+CLIENT_URL=http://localhost:3000
+
+# JWT
+JWT_SECRET=your_jwt_secret_key
+SESSION_SECRET=your_session_secret
+
+# PostgreSQL
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=your_db_password
+DB_NAME=society_management
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:8000/api/v1/auth/google/callback
+
+# Email (SMTP)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_password
+FROM_EMAIL=noreply@society.com
+
+# Firebase Admin (FCM)
+FIREBASE_SERVICE_ACCOUNT_JSON=./service.key.json
+FIREBASE_PROJECT_ID=your_firebase_project_id
+```
+
+### 4. Configure Frontend Environment
+
+Create `client/.env`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+
+# Firebase Web (for push notifications)
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_FIREBASE_VAPID_KEY=your_vapid_key
+```
+
+### 5. Install & Run Backend
+
+```bash
+cd society-management-backend
+npm install
+npm run dev       # Starts on http://localhost:8000
+```
+
+### 6. Install & Run Frontend
+
+```bash
+cd client
+npm install
+npm run dev       # Starts on http://localhost:3000
+```
+
+### 7. Access the Application
+
+| Portal          | URL                                 |
+| --------------- | ----------------------------------- |
+| Resident Portal | `http://localhost:3000/login`       |
+| Admin Portal    | `http://localhost:3000/admin/login` |
 
 ---
 
-## 5) Complete Project Docs
+## 🔐 Roles & Permissions
 
-### Repository structure
-- `client/`
-  - Next.js application (resident + admin portals)
-  - API client: `client/app/lib/api.ts`
-  - Auth/Notification providers and push integration
-  - Main resident UI: `client/app/(user)/*`
-  - Main admin UI: `client/app/admin/(protected)/*`
-  - Firebase messaging client code: `client/app/lib/firebaseMessaging.ts`
-- `society-management-backend/`
-  - Express server entry: `server.js`
-  - Routes: `routes/*.routes.js`
-  - Controllers: `controllers/*.controller.js`
-  - Middleware: `middlewares/auth.js`, `middlewares/validate.js`
-  - SQL schema: `config/schema.sql`
-  - Push/email helpers: `utils/fcm.js`, `utils/email.js`
+The system has **two roles** with distinct access levels:
 
----
+| Feature                               |       Admin 🛡️       |       Resident 👤       |
+| ------------------------------------- | :------------------: | :---------------------: |
+| **Login (Email / Google)**            |          ✅          |           ✅            |
+| **Forgot / Reset Password**           |          ✅          |           ✅            |
+| **View / Edit Profile**               |          ✅          |           ✅            |
+| **View Dashboard**                    | ✅ (Admin dashboard) | ✅ (Resident dashboard) |
+| **Manage Flats (CRUD)**               |          ✅          |           ❌            |
+| **Create Resident Users**             |          ✅          |           ❌            |
+| **Manage Subscription Plans**         |          ✅          |           ❌            |
+| **View Own Subscription Plan**        |          ❌          |           ✅            |
+| **Ensure Monthly Records**            |          ✅          |           ❌            |
+| **View Monthly Records (All Flats)**  |          ✅          |           ❌            |
+| **View Own Monthly Records**          |          ❌          |           ✅            |
+| **Mark Payment as Paid**              |          ✅          |           ❌            |
+| **Make Online Payment**               |          ❌          |   ✅ (own flat only)    |
+| **Manual Payment Entry**              |          ✅          |           ❌            |
+| **View Financial Reports**            |          ✅          |           ❌            |
+| **Export CSV / Print PDF**            |          ✅          |           ❌            |
+| **Send Notifications (Email + Push)** |          ✅          |           ❌            |
+| **Receive Notifications**             |          ❌          |           ✅            |
+| **Mark Notifications as Read**        |          ✅          |           ✅            |
 
-### Setup & Running
+### Middleware Guards
 
-#### 1) PostgreSQL
-1. Create a database (example: `society_management`)
-2. Run the schema:
-   - `psql -d <DB_NAME> -f society-management-backend/config/schema.sql`
-3. Create initial admin and seed flats/plans (this repo does not include a seed script in `society-management-backend/scripts/` even though `package.json` references one).
-
-#### 2) Backend
-1. Install deps:
-   - `cd society-management-backend && npm install`
-2. Configure environment variables (see below)
-3. Run:
-   - `npm run dev` (nodemon)
-   - or `npm start`
-
-#### 3) Frontend
-1. Install deps:
-   - `cd client && npm install`
-2. Configure `NEXT_PUBLIC_API_URL` and Firebase env vars
-3. Run:
-   - `npm run dev`
+- **`authenticate`** — Validates JWT from `Authorization: Bearer <token>` header.
+- **`adminOnly`** — Checks `req.user.role === 'admin'`; returns `403` otherwise.
+- **`validateRequest`** — Validates request body/params against Zod schemas.
 
 ---
 
-### Environment Variables (by code references)
+## ✨ Features
 
-#### Backend (`society-management-backend`)
-- `PORT` (default `8000`)
-- `CLIENT_URL` (CORS origin + password-reset links)
-- `JWT_SECRET` or `SESSION_SECRET` (used as session secret fallback)
-- Database:
-  - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
-- Google OAuth / Passport:
-  - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL`
-- Email (Nodemailer):
-  - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
-  - `FROM_EMAIL` (optional; fallback to `SMTP_USER`)
-- Push (Firebase Admin / FCM):
-  - `FIREBASE_SERVICE_ACCOUNT_JSON`
-  - `FIREBASE_PROJECT_ID`
+### 🔑 Authentication & Security
 
-#### Frontend (`client`)
-- `NEXT_PUBLIC_API_URL` (default `http://localhost:8000/api/v1`)
-- Firebase web messaging:
-  - `NEXT_PUBLIC_FIREBASE_API_KEY`
-  - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
-  - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
-  - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
-  - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
-  - `NEXT_PUBLIC_FIREBASE_APP_ID`
-  - `NEXT_PUBLIC_FIREBASE_VAPID_KEY`
-- Note: the code references `NEXT_PUBLIC_NEXTAUTH_URL` for Google button redirects; ensure it is set if used.
+- Email/password login with **bcrypt** hashing
+- **Google OAuth 2.0** login via Passport.js
+- **JWT-based** session management (stored in localStorage)
+- Forgot password → email reset link (token with expiry)
+- Reset password with hashed token verification
+- Profile update (name, phone, password)
 
-#### Required web push asset
-- The client registers a service worker at `/firebase-messaging-sw.js`.
-- Create/serve it from `client/public/firebase-messaging-sw.js` (it is currently listed in `client/.gitignore`).
+### 👤 Resident Portal
 
----
+- **Dashboard** — Current month status (paid/pending), pending amount summary, quick "Pay Now" action
+- **Subscriptions** — Monthly dues table with payment status, amount, mode, and date
+- **Pay Now** — Select month and record online payment
+- **Notifications** — Bell icon with unread count badge, dropdown list, mark as read
+- **Push Notifications** — Browser foreground FCM push via toast
+- **Profile** — Update name, phone, and password
 
-### API Reference (Express routes)
+### 🛡️ Admin Portal
 
-Base path: `/api/v1`
+- **Dashboard** — Society overview and key metrics
+- **Flats Management** — Create, edit, soft-delete flats with owner details
+- **Resident Users** — Create resident accounts linked to flats
+- **Subscription Plans** — View and update plan amounts by flat type
+- **Monthly Records** — Ensure records for a given month, view all flats, mark as paid
+- **Payment Entry** — Manual payment recording (Cash / UPI / Online)
+- **Reports** — Monthly/yearly financial summaries with CSV download and Print/PDF export
+- **Notifications** — Send email + push notifications to all or selected flats
+- **Profile** — Update admin profile
 
-#### Auth
-- `POST /auth/login` (public)
-  - body: `{ email, password }`
-  - returns: `{ token, user }`
-- `POST /auth/google-login` (public)
-  - body: `{ email, googleId? }`
-  - links the Google account to an existing user record (emails must already exist)
-- `GET /auth/google` (public, Passport OAuth start)
-  - query: `redirect` (optional)
-- `GET /auth/google/callback` (public, Passport OAuth callback)
-  - redirects to frontend `/auth/callback?token=...&role=...`
-- `POST /auth/forgot-password` (public)
-  - body: `{ email }`
-  - returns: `{ message }` (prevents user enumeration)
-- `POST /auth/reset-password` (public)
-  - body: `{ token, newPassword }`
-  - returns: `{ message }`
-- `GET /auth/me` (JWT)
-- `PUT /auth/profile` (JWT)
-  - body: `{ name?, phone?, password? }`
-- `POST /auth/logout` (Passport session logout; frontend mainly clears JWT in localStorage)
+### 📊 Reports & Exports
 
-#### Flats (admin + residents)
-- `GET /flats` (admin only)
-  - returns active flats
-- `GET /flats/me` (JWT, resident)
-  - returns assigned flat details for current user
-- `POST /flats` (admin only)
-  - body: `{ flatNo, ownerName, email, phone, type }`
-- `PUT /flats/:id` (admin only)
-- `DELETE /flats/:id` (admin only)
-  - soft deletes if monthly records exist
+- Filter by **month** (`YYYY-MM`) or **year** (`YYYY`)
+- Totals breakdown by payment mode (Cash, UPI, Online)
+- **CSV export** for spreadsheet analysis
+- **Print / PDF** via browser print dialog
 
-#### Subscription Plans
-- `GET /plans` (admin only)
-- `GET /plans/my` (JWT, resident)
-  - returns the monthly plan amount for the resident's flat (prefers flat-specific plan; falls back to type)
-- `PUT /plans/:type` (admin only)
-  - body: `{ amount, flatId? }`
+### 🔔 Notification System
 
-#### Monthly Records
-- `GET /records?month=YYYY-MM&flatId=...` (JWT)
-  - residents: uses their own flat; ignores flatId
-  - admins: can optionally filter by `flatId`
-  - auto-ensures records exist for the requested month
-- `POST /records/ensure` (admin only)
-  - body: `{ month }`
-  - creates missing `monthly_records` rows for all active flats
-- `PUT /records/:id/pay` (admin only)
-  - body: `{ mode: "Cash" | "UPI" | "Online" }`
-  - sets status to `paid` and stores `payment_mode` + `payment_date`
+- **Email** — SMTP via Nodemailer
+- **Push** — Firebase Cloud Messaging (FCM) to registered browser tokens
+- **In-App** — API polling with unread count badge on bell icon
+- Target: **all flats** or **selected flats**
 
-#### Payments
-- `POST /payments` (JWT)
-  - body: `{ flatId, month, amount, mode }`
-  - residents can only pay for their own flat
+### 🎨 UI/UX
 
-#### Notifications
-- `GET /notifications` (JWT)
-  - admin: returns all notifications
-  - resident: returns notifications targeted to their flat (plus `all`)
-- `POST /notifications` (admin only)
-  - body:
-    - `{ title, message, target: "all" | "selected", flatIds? }`
-  - sends:
-    - Email via SMTP
-    - FCM push notifications to affected flats
-
-#### Push tokens
-- `POST /push-tokens` (JWT)
-  - body: `{ token, deviceType? }`
-  - associates FCM token with resident’s flat
-
-#### Users (admin)
-- `POST /users` (admin only)
-  - body: `{ name, email, phone?, password, flatId }`
-  - creates resident user and links to the flat
-
-#### Reports
-- `GET /reports?month=YYYY-MM` or `GET /reports?year=YYYY`
-  - admin only
-  - returns totals and breakdown by `payment_mode`
+- **Dark / Light** theme toggle
+- Responsive sidebar navigation
+- Toast notifications for success/error feedback
+- Confirmation modals for destructive actions
+- Charts & visualizations with Recharts
 
 ---
 
-### Business Rules & Implementation Details
-- **Monthly records are created on-demand**
-  - `GET /records` calls the backend `ensureRecordsForMonth(month)` before selecting records.
-- **Plan updates apply to new records**
-  - Neither `GET /records` nor monthly records are automatically recalculated after plan updates; ensuring uses current plan amounts.
-- **Payments and status**
-  - `monthly_records.status` is `pending` by default.
-  - Mark paid via:
-    - Admin: `PUT /records/:id/pay`
-    - Resident: `POST /payments` (records online payment)
+## 📡 API Endpoints
+
+> **Base URL:** `/api/v1`
+
+### 🔑 Auth — `/api/v1/auth`
+
+| Method | Endpoint                | Auth   | Description                                |
+| ------ | ----------------------- | ------ | ------------------------------------------ |
+| `POST` | `/auth/login`           | Public | Login with email & password                |
+| `POST` | `/auth/google-login`    | Public | Login/link via Google account              |
+| `GET`  | `/auth/google`          | Public | Initiate Google OAuth flow (Passport)      |
+| `GET`  | `/auth/google/callback` | Public | Google OAuth callback → redirects with JWT |
+| `POST` | `/auth/forgot-password` | Public | Send password reset email                  |
+| `POST` | `/auth/reset-password`  | Public | Reset password using token                 |
+| `GET`  | `/auth/me`              | JWT    | Get current user profile                   |
+| `PUT`  | `/auth/profile`         | JWT    | Update profile (name, phone, password)     |
+| `POST` | `/auth/logout`          | Public | Logout (clears Passport session)           |
 
 ---
 
-## Suggested Next Improvements (Optional)
-- Add the missing backend seed script (referenced in `society-management-backend/package.json`).
-- Wire frontend logout to call `POST /auth/logout` (currently the UI only clears localStorage token).
-- Implement `notification_recipients` tracking if per-recipient read status is needed.
+### 🏠 Flats — `/api/v1/flats`
 
+| Method   | Endpoint     | Auth  | Description                     |
+| -------- | ------------ | ----- | ------------------------------- |
+| `GET`    | `/flats`     | Admin | Get all active flats            |
+| `GET`    | `/flats/me`  | JWT   | Get current user's flat details |
+| `POST`   | `/flats`     | Admin | Create a new flat               |
+| `PUT`    | `/flats/:id` | Admin | Update flat details             |
+| `DELETE` | `/flats/:id` | Admin | Delete/soft-delete a flat       |
+
+**Request body** (`POST /flats`):
+
+```json
+{
+  "flatNo": "A-101",
+  "ownerName": "John Doe",
+  "email": "john@email.com",
+  "phone": "9876543210",
+  "type": "2BHK"
+}
+```
+
+---
+
+### 💳 Subscription Plans — `/api/v1/plans`
+
+| Method | Endpoint       | Auth  | Description                             |
+| ------ | -------------- | ----- | --------------------------------------- |
+| `GET`  | `/plans`       | Admin | Get all subscription plans              |
+| `GET`  | `/plans/my`    | JWT   | Get plan amount for current user's flat |
+| `PUT`  | `/plans/:type` | Admin | Create/update plan amount by flat type  |
+
+**Request body** (`PUT /plans/:type`):
+
+```json
+{
+  "amount": 2500,
+  "flatId": null
+}
+```
+
+---
+
+### 📋 Monthly Records — `/api/v1/records`
+
+| Method | Endpoint                            | Auth  | Description                                 |
+| ------ | ----------------------------------- | ----- | ------------------------------------------- |
+| `GET`  | `/records?month=YYYY-MM&flatId=...` | JWT   | Get monthly records (auto-ensures records)  |
+| `POST` | `/records/ensure`                   | Admin | Create missing records for all active flats |
+| `PUT`  | `/records/:id/pay`                  | Admin | Mark a record as paid                       |
+
+**Request body** (`POST /records/ensure`):
+
+```json
+{ "month": "2026-03" }
+```
+
+**Request body** (`PUT /records/:id/pay`):
+
+```json
+{ "mode": "Cash" }
+```
+
+---
+
+### 💰 Payments — `/api/v1/payments`
+
+| Method | Endpoint    | Auth | Description                                 |
+| ------ | ----------- | ---- | ------------------------------------------- |
+| `POST` | `/payments` | JWT  | Record a payment (residents: own flat only) |
+
+**Request body**:
+
+```json
+{
+  "flatId": 1,
+  "month": "2026-03",
+  "amount": 2500,
+  "mode": "Online"
+}
+```
+
+---
+
+### 🔔 Notifications — `/api/v1/notifications`
+
+| Method | Endpoint                      | Auth  | Description                                        |
+| ------ | ----------------------------- | ----- | -------------------------------------------------- |
+| `GET`  | `/notifications`              | JWT   | Get notifications (admin: all; resident: own flat) |
+| `GET`  | `/notifications/unread-count` | JWT   | Get unread notification count                      |
+| `PUT`  | `/notifications/read-all`     | JWT   | Mark all notifications as read                     |
+| `PUT`  | `/notifications/:id/read`     | JWT   | Mark a single notification as read                 |
+| `POST` | `/notifications`              | Admin | Send notification (email + push)                   |
+
+**Request body** (`POST /notifications`):
+
+```json
+{
+  "title": "Maintenance Due",
+  "message": "Please pay your March dues.",
+  "target": "all",
+  "flatIds": []
+}
+```
+
+---
+
+### 📊 Reports — `/api/v1/reports`
+
+| Method | Endpoint                 | Auth  | Description              |
+| ------ | ------------------------ | ----- | ------------------------ |
+| `GET`  | `/reports?month=YYYY-MM` | Admin | Monthly financial report |
+| `GET`  | `/reports?year=YYYY`     | Admin | Yearly financial report  |
+
+**Response** includes totals and breakdown by payment mode.
+
+---
+
+### 👥 Users — `/api/v1/users`
+
+| Method | Endpoint | Auth  | Description                             |
+| ------ | -------- | ----- | --------------------------------------- |
+| `POST` | `/users` | Admin | Create a resident user linked to a flat |
+
+**Request body**:
+
+```json
+{
+  "name": "Jane Doe",
+  "email": "jane@email.com",
+  "phone": "9876543210",
+  "password": "securepassword",
+  "flatId": 1
+}
+```
+
+---
+
+### 📱 Push Tokens — `/api/v1/push-tokens`
+
+| Method | Endpoint       | Auth | Description                                |
+| ------ | -------------- | ---- | ------------------------------------------ |
+| `POST` | `/push-tokens` | JWT  | Register FCM token for current user's flat |
+
+**Request body**:
+
+```json
+{
+  "token": "fcm_device_token_here",
+  "deviceType": "web"
+}
+```
+
+---
+### 🔄 End-to-End Workflow
+<img src="./workflow/worflow.png" alt="Worflow" width="700" height="500"/>
+
+
+### 🔄 Database ER Diagram
+<img src="./workflow/Final_db.jpg" alt="ER Diagram" width="700" height="500"/>
