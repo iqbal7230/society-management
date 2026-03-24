@@ -2,22 +2,20 @@ import pool from "../config/db.js";
 
 // Helper to get current user's flat_id (for residents)
 async function getUserFlatId(userId) {
-  const result = await pool.query(
-    "SELECT flat_id FROM users WHERE id = $1",[userId],
-  );
+  const result = await pool.query("SELECT flat_id FROM users WHERE id = $1", [
+    userId,
+  ]);
   return result.rows[0]?.flat_id || null;
 }
 
 // Helper to ensure records exist for a given month
 async function ensureRecordsForMonth(month) {
   // Get ALL flats (important change 🔥)
-  const flatsRes = await pool.query(
-    "SELECT id, type, is_active FROM flats"
-  );
+  const flatsRes = await pool.query("SELECT id, type, is_active FROM flats");
   const flats = flatsRes.rows;
 
   const plansRes = await pool.query(
-    "SELECT type, amount FROM subscription_plans"
+    "SELECT type, amount FROM subscription_plans",
   );
 
   const planMap = {};
@@ -28,7 +26,7 @@ async function ensureRecordsForMonth(month) {
   for (const flat of flats) {
     const existing = await pool.query(
       "SELECT id FROM monthly_records WHERE flat_id = $1 AND month = $2",
-      [flat.id, month]
+      [flat.id, month],
     );
 
     if (existing.rows.length > 0) continue;
@@ -40,7 +38,7 @@ async function ensureRecordsForMonth(month) {
       `INSERT INTO monthly_records
        (flat_id, month, amount, status, flat_status, payment_mode, paid_by)
        VALUES ($1, $2, $3, 'pending', $4, '', '')`,
-      [flat.id, month, amount, flat.is_active ? "active" : "inactive"]
+      [flat.id, month, amount, flat.is_active ? "active" : "inactive"],
     );
   }
 }
@@ -87,15 +85,15 @@ export const getRecords = async (req, res) => {
 
     const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
     const query = `
-SELECT 
-  mr.*,
-  f.flat_no,
-  f.owner_name
-FROM monthly_records mr
-LEFT JOIN flats f ON mr.flat_id = f.id
-${whereClause}
-ORDER BY mr.month DESC, mr.flat_id
-`;
+                SELECT 
+                  mr.*,
+                  f.flat_no,
+                  f.owner_name
+                FROM monthly_records mr
+                LEFT JOIN flats f ON mr.flat_id = f.id
+                ${whereClause}
+                ORDER BY mr.month DESC, mr.flat_id
+                `;
 
     const result = await pool.query(query, values);
     res.json(result.rows);
@@ -145,9 +143,7 @@ export const markAsPaid = async (req, res) => {
 
     const record = recordRes.rows[0];
     if (record.status === "paid") {
-      return res
-        .status(400)
-        .json({ error: "Already paid for this month" });
+      return res.status(400).json({ error: "Already paid for this month" });
     }
 
     const updatedRes = await pool.query(
@@ -168,4 +164,3 @@ export const markAsPaid = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
-

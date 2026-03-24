@@ -2,28 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  apiGetFlats,
-  apiGetRecords,
-  apiGetReport,
-  ApiReport,
-  ApiFlat,
-  ApiRecord,
-} from "../../../lib/api";
+import { apiGetFlats, apiGetRecords, apiGetReport, ApiReport, ApiFlat, ApiRecord} from "../../../lib/api";
 import { getCurrentMonth, getMonthLabel } from "../../../lib/data";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
+import {ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,BarChart,Bar,PieChart,
+  Pie,Cell,
 } from "recharts";
 
 type MonthSummary = ApiReport & { month: string };

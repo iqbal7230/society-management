@@ -14,6 +14,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const STORAGE_KEY = "society_theme";
 
+// No prop drilling, No re-render needed for styling, CSS handles everything - DOM manipulation
 function applyThemeToDom(theme: Theme) {
   if (typeof document === "undefined") return;
   const html = document.documentElement;
@@ -38,6 +39,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyThemeToDom(t);
   }, []);
 
+  // state update , localStorage update ,DOM update
   const toggleTheme = useCallback(() => {
     setThemeState((prev) => {
       const next: Theme = prev === "dark" ? "light" : "dark";
@@ -49,6 +51,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  //prevents unecessary re-renders
   const value = useMemo(
     () => ({ theme, toggleTheme, setTheme }),
     [theme, toggleTheme, setTheme],
