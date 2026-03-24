@@ -30,10 +30,7 @@ Society Management System is designed for **residential societies** to digitally
 
 ## 🎬 Video Demo
 
-> **📹 Coming Soon** — A recorded walkthrough of both the Admin and Resident portals will be added here.
-
-<!-- Replace with your video link or embed -->
-<!-- ![Demo Video](path/to/demo.mp4) -->
+Video Link: https://drive.google.com/file/d/19f_IN4BCZJUskuw76RSstbcmN91V96QR/view?usp=sharing
 
 ---
 
