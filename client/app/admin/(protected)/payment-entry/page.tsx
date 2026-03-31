@@ -40,6 +40,11 @@ export default function AdminPaymentEntryPage() {
     ? plans.find((p) => p.type === selectedFlat.type)?.amount ?? 0
     : 0;
 
+  const amount = Number(form.amount) || planAmount;
+
+  
+  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const flatId = Number(form.flatId);
@@ -48,7 +53,17 @@ export default function AdminPaymentEntryPage() {
       showToast("Select a flat", "error");
       return;
     }
-    setSubmitting(true);
+    if (amount > planAmount) {
+      showToast(`Amount cannot exceed ₹${planAmount}`, "error");
+      return;
+    }
+
+
+    if (amount <= 0) {
+      showToast("Enter valid amount", "error");
+      return;
+    }
+      setSubmitting(true);
     try {
       await apiAddPayment(flatId, form.month, amount, form.mode);
       showToast("Payment recorded successfully", "success");
@@ -99,11 +114,16 @@ export default function AdminPaymentEntryPage() {
             <label className="block text-xs font-medium text-text-secondary mb-1">Amount (₹)</label>
             <input
               type="number"
-              min={0}
+              min={planAmount}
+              max={planAmount}
               step={1}
               value={form.amount}
-              onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
-              placeholder={planAmount ? `Default: ${planAmount}` : ""}
+              onChange={(e) =>{ 
+                const val = Number(e.target.value);
+                if(val> planAmount) return
+                setForm((f) => ({ ...f, amount: e.target.value }))
+              }}
+              placeholder={` ${planAmount}`}
               className="w-full py-2 px-4 bg-bg-input border border-border-default rounded-lg text-text-primary text-sm"
             />
           </div>

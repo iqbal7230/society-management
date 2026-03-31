@@ -43,7 +43,7 @@ export default function AdminFlatsPage() {
 
 const [deleting, setDeleting] = useState(false);
 
-  const perPage = 8;
+  const perPage = 10;
 
   const load = async () => {
     setLoading(true);
@@ -187,7 +187,7 @@ const confirmDelete = async () => {
 
   setDeleting(true);
   try {
-    // const res = await apiDeleteFlat(deleteModal.flat.id);
+    const res = await apiDeleteFlat(deleteModal.flat.id);
 
     showToast("Flat deleted");
 

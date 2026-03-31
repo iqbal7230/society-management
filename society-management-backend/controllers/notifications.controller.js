@@ -25,8 +25,7 @@ export const getNotifications = async (req, res) => {
     }
 
     const result = await pool.query(
-      `SELECT *
-       FROM notifications
+      `SELECT * FROM notifications
        WHERE target = 'all'
           OR target = $1
           OR (
@@ -72,7 +71,7 @@ export const createNotification = async (req, res) => {
           .json({ error: "flatIds is required when target=selected" });
       }
     } else {
-      // Backward compatible: allow target to be "all" or comma-separated list
+      //allow target to be "all" or comma-separated list
       const parts = String(normalizedTarget)
         .split(",")
         .map((p) => Number(p.trim()))

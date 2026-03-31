@@ -18,8 +18,9 @@ router.put("/:id", authenticate, adminOnly,
   validateRequest({body: updateFlatBodySchema }),
   updateFlat,
 );
-router.delete("/:id", authenticate, adminOnly, deleteFlat,
-);
+router.delete("/:id", authenticate, adminOnly, deleteFlat);
 
 export default router;
+
+
 

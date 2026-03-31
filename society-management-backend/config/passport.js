@@ -22,6 +22,7 @@ export function configurePassport(passport) {
         clientSecret,
         callbackURL,
       },
+      // run after google login
       async (accessToken, refreshToken, profile, done) => {
         try {
           const email =
@@ -41,7 +42,9 @@ export function configurePassport(passport) {
     ),
   );
 
+  // store user in session 
   passport.serializeUser((user, done) => done(null, user));
+  // get user from session 
   passport.deserializeUser((user, done) => done(null, user));
 }
 

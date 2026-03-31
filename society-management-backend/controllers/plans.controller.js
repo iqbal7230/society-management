@@ -3,7 +3,7 @@ import pool from "../config/db.js";
 export const getPlans = async (_req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM subscription_plans ORDER BY type, flat_id NULLS FIRST",
+      "SELECT * FROM subscription_plans ORDER BY type",
     );
     res.json(result.rows);
   } catch (err) {

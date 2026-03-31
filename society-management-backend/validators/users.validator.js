@@ -18,5 +18,5 @@ export const createUserSchema = z.object({
 
   password: z.string().min(8, "Password must be at least 8 characters"),
 
-  flatId: z.number(), // ✅ YOU MISSED THIS
+  flatId: z.number(), 
 });
